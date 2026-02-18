@@ -1,7 +1,7 @@
 // credit: https://github.com/dano1234/SharedMindsF25/tree/master/Week%2002%20ML%20APIs/ClientExamples/10%20Text%20Embeddings%20Clustered
 let words = JSON.parse(localStorage.getItem("social_words")) || [];
 let embeddings = JSON.parse(localStorage.getItem("social_embeds")) || [];
-let isUserNode = JSON.parse(localStorage.getItem("social_is_user")) || []; // 新增：标记是否为用户
+let isUserNode = JSON.parse(localStorage.getItem("social_is_user")) || [];
 
 let umap;
 let umapReady = false;
@@ -159,4 +159,5 @@ clearBtn.onclick = () => {
 };
 
 if (words.length > 0) initUMAP();
+
 animate();
