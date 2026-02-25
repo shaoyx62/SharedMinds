@@ -21,7 +21,8 @@ const firebaseConfig = {
   projectId: "week5-server",
   storageBucket: "week5-server.firebasestorage.app",
   messagingSenderId: "930220057354",
-  appId: "1:930220057354:web:7205c19228fe5d945d10f3"
+  appId: "1:930220057354:web:7205c19228fe5d945d10f3",
+  databaseURL: "https://week5-server-default-rtdb.firebaseio.com"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -164,4 +165,5 @@ async function evolveWorld(newWord){
     console.error("Fetch failed:", err);
     input.value = "Network error - try again";
   }
+
 }
