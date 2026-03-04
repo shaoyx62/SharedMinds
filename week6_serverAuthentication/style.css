@@ -1,0 +1,385 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Space+Mono:wght@400&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: #020412;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 0;
+}
+
+/* ── Side Panel ── */
+#sidePanel {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 280px;
+  height: 100%;
+  background: rgba(240, 238, 255, 0.96);
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(180,170,220,0.3);
+  padding: 24px 18px;
+  z-index: 10;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-title {
+  color: #3a3560;
+  font-size: 12px;
+  font-family: 'Space Mono', monospace;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin: 0;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(100,90,160,0.2);
+}
+
+/* ── Auth ── */
+#authDiv {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.auth-name {
+  color: #2a2550;
+  font-size: 13px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auth-btn {
+  background: #2a2550;
+  border: none;
+  color: white;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-family: 'Space Mono', monospace;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  letter-spacing: 0.05em;
+  text-align: center;
+}
+
+.auth-btn:hover { background: #3d3780; }
+
+.auth-btn.secondary {
+  background: transparent;
+  border: 1px solid rgba(60,50,160,0.3);
+  color: #3a3580;
+}
+.auth-btn.secondary:hover { background: rgba(60,50,160,0.06); }
+
+.auth-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-family: 'Space Mono', monospace;
+  border: 1px solid rgba(100,90,180,0.25);
+  border-radius: 5px;
+  background: white;
+  color: #1a1640;
+  outline: none;
+  margin-bottom: 2px;
+}
+.auth-input:focus { border-color: rgba(60,50,160,0.5); }
+
+.auth-divider {
+  text-align: center;
+  color: rgba(60,50,120,0.35);
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  margin: 4px 0;
+}
+
+/* ── Timeline ── */
+#timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.timeline-hint {
+  color: rgba(60,50,120,0.4);
+  font-size: 13px;
+  font-style: italic;
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* ── Wish Item ── */
+.wish-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(100,90,180,0.15);
+  background: white;
+  box-shadow: 0 1px 4px rgba(60,50,120,0.06);
+}
+
+/* pending — default white */
+.wish-item.pending {
+  border-color: rgba(100,90,180,0.2);
+  background: white;
+}
+
+/* fulfilled — soft green */
+.wish-item.fulfilled {
+  border-color: rgba(40,180,100,0.35);
+  background: rgba(220,255,235,0.7);
+}
+
+/* gave up — soft purple/grey */
+.wish-item.gaveUp {
+  border-color: rgba(140,100,200,0.25);
+  background: rgba(230,225,245,0.6);
+  opacity: 0.7;
+}
+
+/* ── Status Badge ── */
+.wish-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.08em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+}
+
+.wish-badge.pending {
+  background: rgba(100,90,200,0.1);
+  color: #5545aa;
+}
+
+.wish-badge.fulfilled {
+  background: rgba(40,180,100,0.15);
+  color: #1a7a45;
+}
+
+.wish-badge.gaveUp {
+  background: rgba(140,100,200,0.12);
+  color: #7755aa;
+}
+
+/* ── Wish Text & Date ── */
+.wish-text {
+  color: #1a1640;
+  font-size: 15px;
+  line-height: 1.4;
+  margin-bottom: 4px;
+}
+
+.wish-item.gaveUp .wish-text {
+  text-decoration: line-through;
+  color: #8877aa;
+}
+
+.wish-item.fulfilled .wish-text {
+  color: #1a5535;
+}
+
+.wish-date {
+  color: rgba(60,50,120,0.4);
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  margin-bottom: 8px;
+}
+
+/* ── Action Buttons ── */
+.wish-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.wish-btn {
+  flex: 1;
+  padding: 5px 0;
+  font-size: 11px;
+  font-family: 'Space Mono', monospace;
+  border: 1px solid;
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.03em;
+}
+
+.wish-btn.fulfill {
+  border-color: rgba(40,180,100,0.5);
+  color: #1a7a45;
+}
+.wish-btn.fulfill:hover { background: rgba(40,180,100,0.1); }
+
+.wish-btn.giveup {
+  border-color: rgba(140,100,200,0.35);
+  color: #7755aa;
+}
+.wish-btn.giveup:hover { background: rgba(140,100,200,0.08); }
+
+/* ── Tribute Section ── */
+.tribute-wrap {
+  margin-top: 8px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.tribute-input {
+  flex: 1;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-style: italic;
+  border: 1px solid rgba(40,180,100,0.3);
+  border-radius: 4px;
+  background: rgba(220,255,235,0.5);
+  color: #1a3d2a;
+  outline: none;
+}
+.tribute-input:focus { border-color: rgba(40,180,100,0.7); }
+.tribute-input::placeholder { color: rgba(40,120,70,0.45); }
+
+.wish-btn.tribute-send {
+  flex: 0 0 auto;
+  padding: 5px 10px;
+  border-color: rgba(40,180,100,0.5);
+  color: #1a7a45;
+}
+.wish-btn.tribute-send:hover { background: rgba(40,180,100,0.12); }
+
+/* tribute display (already sent) */
+.wish-tribute-display {
+  margin-top: 6px;
+  font-size: 13px;
+  font-style: italic;
+  color: #2a6644;
+  background: rgba(40,180,100,0.08);
+  border-left: 2px solid rgba(40,180,100,0.4);
+  padding: 4px 8px;
+  border-radius: 0 4px 4px 0;
+}
+
+/* ── Wish Input ── */
+#wishInput {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(calc(-50% - 140px));
+  width: min(480px, calc(100vw - 340px));
+  font-size: 17px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  padding: 12px 18px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(240, 238, 255, 0.92);
+  color: #1a1640;
+  outline: none;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, box-shadow 0.2s;
+  letter-spacing: 0.03em;
+}
+
+#wishInput::placeholder {
+  color: rgba(60,50,120,0.4);
+  font-style: italic;
+}
+
+#wishInput:focus {
+  border-color: rgba(255,255,255,0.9);
+  box-shadow: 0 0 20px rgba(180,170,255,0.3);
+}
+
+/* ── Wish edit inline ── */
+.wish-text-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.wish-text-wrap .wish-text {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.edit-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: rgba(80,70,160,0.4);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+.edit-btn:hover { color: #5545aa; }
+
+.wish-edit-input {
+  flex: 1;
+  padding: 3px 7px;
+  font-size: 15px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  border: 1px solid rgba(80,70,180,0.4);
+  border-radius: 4px;
+  background: rgba(240,238,255,0.8);
+  color: #1a1640;
+  outline: none;
+}
+.wish-edit-input:focus { border-color: #5545aa; }
+
+/* ── Similar wishes ── */
+.similar-section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(100,90,180,0.2);
+}
+
+.similar-title {
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 0.1em;
+  color: rgba(80,70,160,0.5);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.similar-card {
+  background: rgba(100,90,200,0.05);
+  border: 1px solid rgba(100,90,200,0.12);
+  border-radius: 5px;
+  padding: 6px 8px;
+  margin-bottom: 5px;
+}
+
+.similar-user {
+  font-size: 10px;
+  font-family: 'Space Mono', monospace;
+  color: rgba(80,70,160,0.55);
+  margin-bottom: 2px;
+}
+
+.similar-text {
+  font-size: 13px;
+  color: #2a2060;
+  line-height: 1.3;
+}
