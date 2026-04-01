@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FM Signal</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div id="three-container"></div>
+  <div id="p5-container"></div>
+
+  <div id="cam-container">
+    <canvas id="overlay"></canvas>
+  </div>
+
+  <div id="instructions">
+    <div class="inst-line" style="color:#4499ff">left hand tilt <span class="inst-arrow">→</span> tune frequency</div>
+    <div class="inst-line" style="color:#ff8844">right hand height <span class="inst-arrow">→</span> amplitude</div>
+    <div class="inst-line" style="color:#aeaeae">space bar <span class="inst-arrow">→</span> lock / unlock live</div>
+  </div>
+
+  <div id="debug">starting...</div>
+  <div id="gesture-status"></div>
+  <div id="lock-indicator">▶ live</div>
+
+  <div id="ui">
+    <div id="freq-display">FM 88.0</div>
+    <div id="label">YOUR FREQUENCY</div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+  <script src="ripple.js"></script>
+  <script src="audio.js"></script>
+  <script src="camera.js"></script>
+
+</body>
+</html>
