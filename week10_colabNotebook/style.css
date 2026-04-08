@@ -137,6 +137,11 @@ header {
   margin-bottom: 8px;
 }
 
+.question-section textarea::placeholder {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+}
+
 .question-section textarea {
   width: 100%;
   background: transparent;
