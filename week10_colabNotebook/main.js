@@ -1,8 +1,20 @@
-const GIST_URL = 'https://gist.githubusercontent.com/shaoyx62/91d3ac46dd6f2b66db4762c92a26a8ec/raw/ngrokURL.txt';
+const GIST_URL = 'https://gist.githubusercontent.com/shaoyx62/91d3ac46dd6f2b66db4762c92a26a8ec/raw/9d24a4d8b0371d24363d7525519d994dee769a92/CloudflareTunnelURL.txt';
 
 async function getColabURL() {
   const res = await fetch(GIST_URL + '?t=' + Date.now());
   return (await res.text()).trim();
+}
+
+async function fetchOracle(endpoint, body) {
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body)
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return await res.json();
 }
 
 async function consult() {
@@ -30,19 +42,9 @@ async function consult() {
 
   try {
     const url      = await getColabURL();
-    const endpoint = url.replace(/\/$/, '') + '/oracle';
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'ngrok-skip-browser-warning': 'true',
-      },
-      body: JSON.stringify({ n1, n2, n3, question })
-    });
-
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
+    console.log('Colab URL:', url);
+    const endpoint = url + '/oracle';
+    const data     = await fetchOracle(endpoint, { n1, n2, n3, question });
 
     document.getElementById('loading').classList.remove('visible');
 
