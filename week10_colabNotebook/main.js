@@ -1,4 +1,4 @@
-const GIST_URL = 'https://gist.githubusercontent.com/shaoyx62/91d3ac46dd6f2b66db4762c92a26a8ec/raw/9d24a4d8b0371d24363d7525519d994dee769a92/CloudflareTunnelURL.txt';
+const GIST_URL = 'https://gist.githubusercontent.com/shaoyx62/91d3ac46dd6f2b66db4762c92a26a8ec/raw/6eb257f91207a02f5c29d7525e5c19ffa6d2cf1f/CloudflareTunnelURL.txt';
 const GIST_ID = '91d3ac46dd6f2b66db4762c92a26a8ec';
 
 async function getColabURL() {
