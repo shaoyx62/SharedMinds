@@ -6,7 +6,7 @@ async function getColabURL() {
     headers: { 'Accept': 'application/vnd.github.v3+json' }
   });
   const data = await res.json();
-  return data.files['CloudFlareURL.txt'].content.trim();
+  return data.files['CloudflareTunnelURL.txt'].content.trim();
 }
 
 async function fetchOracle(endpoint, body) {
