@@ -142,6 +142,7 @@ header {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   font-weight: bold;
+  color: var(--fade);
 }
 
 .question-section textarea {
@@ -153,6 +154,7 @@ header {
   font-size: 18px;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
+  font-weight: bold;
   color: var(--ink);
   outline: none;
   resize: none;
