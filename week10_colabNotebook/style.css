@@ -143,9 +143,9 @@ header {
   border: none;
   border-bottom: 1px solid var(--fade);
   padding: 8px 0;
-  font-family: 'IM Fell English', serif;
   font-size: 16px;
-  font-style: normal;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
   color: var(--ink);
   outline: none;
   resize: none;
