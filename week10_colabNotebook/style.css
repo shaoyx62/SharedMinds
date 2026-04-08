@@ -76,7 +76,7 @@ header {
   font-size: 15px;
   letter-spacing: 2px;
   color: var(--ink);
-  /* text-transform: uppercase; */
+  text-decoration: underline;
   margin-bottom: 16px;
   display: block;
 }
@@ -133,13 +133,15 @@ header {
   font-size: 15px;
   letter-spacing: 2px;
   color: var(--ink);
-  /* text-transform: uppercase; */
+  text-decoration: underline;
   margin-bottom: 8px;
 }
 
 .question-section textarea::placeholder {
+  font-size: 18px;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
+  font-weight: bold;
 }
 
 .question-section textarea {
@@ -148,7 +150,7 @@ header {
   border: none;
   border-bottom: 1px solid var(--fade);
   padding: 8px 0;
-  font-size: 16px;
+  font-size: 18px;
   font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   color: var(--ink);
