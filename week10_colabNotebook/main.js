@@ -1,8 +1,12 @@
 const GIST_URL = 'https://gist.githubusercontent.com/shaoyx62/91d3ac46dd6f2b66db4762c92a26a8ec/raw/9d24a4d8b0371d24363d7525519d994dee769a92/CloudflareTunnelURL.txt';
+const GIST_ID = '91d3ac46dd6f2b66db4762c92a26a8ec';
 
 async function getColabURL() {
-  const res = await fetch(GIST_URL + '?t=' + Date.now());
-  return (await res.text()).trim();
+  const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+    headers: { 'Accept': 'application/vnd.github.v3+json' }
+  });
+  const data = await res.json();
+  return data.files['CloudFlareURL.txt'].content.trim();
 }
 
 async function fetchOracle(endpoint, body) {
