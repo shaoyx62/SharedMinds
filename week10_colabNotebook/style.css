@@ -1,0 +1,319 @@
+:root {
+  --ink: #1a1410;
+  --paper: #f2ead8;
+  --red: #8b1a1a;
+  --gold: #b5862a;
+  --fade: #c4b89a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'IM Fell English', serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 20px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 28px, rgba(0,0,0,0.015) 28px, rgba(0,0,0,0.015) 29px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+}
+
+/* header */
+header {
+  text-align: center;
+  margin-bottom: 56px;
+}
+
+.title-zh {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  letter-spacing: 8px;
+  color: var(--fade);
+  margin-bottom: 10px;
+}
+
+.title-en {
+  font-size: 36px;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1;
+  margin-bottom: 16px;
+}
+
+.divider {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+/* numbers */
+.numbers-section {
+  margin-bottom: 40px;
+}
+
+.numbers-label {
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--ink);
+  /* text-transform: uppercase; */
+  margin-bottom: 16px;
+  display: block;
+}
+
+.numbers-row {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.number-input {
+  flex: 1;
+  text-align: center;
+}
+
+.number-input input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--fade);
+  padding: 8px 4px;
+  font-family: 'IM Fell English', serif;
+  font-size: 28px;
+  color: var(--ink);
+  text-align: center;
+  outline: none;
+}
+
+.number-input input:focus { border-bottom-color: var(--gold); }
+
+.number-input label {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--fade);
+  margin-top: 6px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.sep {
+  font-size: 20px;
+  color: var(--fade);
+  padding-bottom: 12px;
+}
+
+/* question */
+.question-section {
+  margin-bottom: 40px;
+}
+
+.question-section label {
+  display: block;
+  font-size: 15px;
+  letter-spacing: 2px;
+  color: var(--ink);
+  /* text-transform: uppercase; */
+  margin-bottom: 8px;
+}
+
+.question-section textarea {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--fade);
+  padding: 8px 0;
+  font-family: 'IM Fell English', serif;
+  font-size: 16px;
+  font-style: normal;
+  color: var(--ink);
+  outline: none;
+  resize: none;
+  line-height: 1.6;
+}
+
+.question-section textarea:focus { border-bottom-color: var(--gold); }
+
+/* submit */
+.submit-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid var(--ink);
+  padding: 14px;
+  font-family: 'IM Fell English', serif;
+  font-size: 13px;
+  letter-spacing: 4px;
+  color: var(--ink);
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s;
+  margin-bottom: 56px;
+}
+
+.submit-btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.submit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* guas */
+.guas-section {
+  display: none;
+  margin-bottom: 48px;
+}
+
+.guas-section.visible { display: block; }
+
+.guas-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.gua-card {
+  flex: 1;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  position: relative;
+}
+
+.gua-card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.gua-card:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 10%;
+  height: 80%;
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, var(--fade), transparent);
+}
+
+.gua-symbol {
+  font-size: 32px;
+  color: var(--red);
+  display: block;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.gua-name-zh {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 16px;
+  color: var(--ink);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.gua-name-en {
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--fade);
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.gua-role {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+/* answer */
+.answer-section {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  border-top: 1px solid var(--fade);
+  padding-top: 36px;
+  margin-bottom: 48px;
+}
+
+.answer-section.visible { display: block; }
+.answer-section.show { opacity: 1; }
+
+.answer-text {
+  font-size: 18px;
+  font-style: italic;
+  line-height: 1.9;
+  color: var(--ink);
+  text-align: center;
+}
+
+/* loading */
+.loading {
+  display: none;
+  text-align: center;
+  padding: 24px;
+  color: var(--fade);
+  font-size: 12px;
+  letter-spacing: 4px;
+}
+
+.loading.visible { display: block; }
+
+.dots::after {
+  content: '';
+  animation: dots 1.5s infinite;
+}
+
+@keyframes dots {
+  0%   { content: ''; }
+  25%  { content: '.'; }
+  50%  { content: '..'; }
+  75%  { content: '...'; }
+}
+
+/* error */
+.error {
+  display: none;
+  color: var(--red);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.error.visible { display: block; }
+
+/* note */
+.note {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--fade);
+  line-height: 2;
+  margin-top: 20px;
+  font-style: italic;
+}

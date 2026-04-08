@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小六壬 · Xiao Liu Ren</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400&family=IM+Fell+English:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <div class="title-zh">小 六 壬</div>
+    <div class="title-en">Xiao Liu Ren</div>
+    <div class="divider"></div>
+  </header>
+
+  <div class="numbers-section">
+    <span class="numbers-label">Any Three Numbers You Wish to Use</span>
+    <div class="numbers-row">
+      <div class="number-input">
+        <input type="number" id="n1" placeholder="—" min="1">
+        <label>Start</label>
+      </div>
+      <div class="sep">·</div>
+      <div class="number-input">
+        <input type="number" id="n2" placeholder="—" min="1">
+        <label>Process</label>
+      </div>
+      <div class="sep">·</div>
+      <div class="number-input">
+        <input type="number" id="n3" placeholder="—" min="1">
+        <label>Result</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="question-section">
+    <label>Your Question</label>
+    <textarea id="question" rows="2" placeholder="What would you like to know..."></textarea>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <button class="submit-btn" id="submit-btn" onclick="consult()">
+    Cast the Reading
+  </button>
+
+  <div class="loading" id="loading">
+    <span class="dots">reading the moment</span>
+  </div>
+
+  <div class="guas-section" id="guas-section">
+    <div class="guas-row">
+      <div class="gua-card" id="gua-0">
+        <span class="gua-symbol" id="sym-0"></span>
+        <span class="gua-name-zh" id="name-zh-0"></span>
+        <span class="gua-name-en" id="name-en-0"></span>
+        <span class="gua-role">Start</span>
+      </div>
+      <div class="gua-card" id="gua-1">
+        <span class="gua-symbol" id="sym-1"></span>
+        <span class="gua-name-zh" id="name-zh-1"></span>
+        <span class="gua-name-en" id="name-en-1"></span>
+        <span class="gua-role">Process</span>
+      </div>
+      <div class="gua-card" id="gua-2">
+        <span class="gua-symbol" id="sym-2"></span>
+        <span class="gua-name-zh" id="name-zh-2"></span>
+        <span class="gua-name-en" id="name-en-2"></span>
+        <span class="gua-role">Result</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="answer-section" id="answer-section">
+    <p class="answer-text" id="answer-text"></p>
+  </div>
+
+  <div class="note">
+    First from the origin · second from the first · third from the second
+  </div>
+
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>
