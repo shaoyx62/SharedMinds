@@ -265,6 +265,7 @@ header {
 
 .answer-text {
   font-size: 18px;
+  font-family: 'Cormorant Garamond', serif;
   font-style: italic;
   line-height: 1.9;
   color: var(--ink);
