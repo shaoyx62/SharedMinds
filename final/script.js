@@ -1170,20 +1170,20 @@ function finishPlay(tier, pct, isInitiator) {
 
   if (isInitiator) {
     send('finish', { tier, matchPct: pct });
-  }
 
-  // save to gallery
-  saveToGallery({
-    tier,
-    matchPct: pct,
-    target: state.target,
-    waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
-    waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
-    nameA: state.role === 'A' ? state.name : state.peer.name,
-    nameB: state.role === 'B' ? state.name : state.peer.name,
-    usedAi: !!state.aiHelper,
-    ts: Date.now(),
-  });
+    // Only the initiator saves to gallery — avoids duplicates and ensures complete data
+    saveToGallery({
+      tier,
+      matchPct: pct,
+      target: state.target,
+      waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
+      waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
+      nameA: state.role === 'A' ? state.name : state.peer.name,
+      nameB: state.role === 'B' ? state.name : state.peer.name,
+      usedAi: !!state.aiHelper,
+      ts: Date.now(),
+    });
+  }
 
   // update result UI
   const tierEl = document.getElementById('result-tier');
@@ -1527,7 +1527,7 @@ function renderGalleryItems(grid, list) {
   filtered.forEach((entry, idx) => {
     // Validate entry has required data
     if (!entry || !entry.target || !entry.waveA || !entry.waveB) {
-      console.warn('[GALLERY] skipping invalid entry:', entry);
+      console.warn('[GALLERY] skipping invalid entry:', JSON.stringify(entry).slice(0, 200));
       return;
     }
     const card = document.createElement('div');
