@@ -136,120 +136,154 @@ function leaveRoom() {
 }
 
 function joinMatchmaking() {
+  if (!myUid) return;
   const queueRef = db.ref('queue');
-  const myEntry  = queueRef.push();
-  myEntry.set({ uid: myUid, name: state.name, ts: firebase.database.ServerValue.TIMESTAMP });
 
-  // Listen for assignment: when a room ID appears at /assignments/{uid}
-  const assignRef = db.ref('assignments/' + myUid);
-  assignRef.on('value', (snap) => {
-    const assignment = snap.val();
-    if (!assignment) return;
-    assignRef.off();
-    assignRef.remove();
-    myEntry.remove();
-
-    roomId = assignment.roomId;
-    state.role = assignment.role;
-    roomRef = db.ref('rooms/' + roomId);
-
-    // Write my player data
-    roomRef.child('players/' + state.role).set({
-      uid: myUid, name: state.name,
-      freq: state.me.freq, amp: state.me.amp, phase: state.me.phase,
+  // Clean up any stale entries from this user first
+  queueRef.orderByChild('uid').equalTo(myUid).once('value', (snap) => {
+    snap.forEach(c => c.ref.remove());
+  }).then(() => {
+    // Add myself to the queue
+    const myEntryRef = queueRef.push();
+    const myEntryKey = myEntryRef.key;
+    myEntryRef.set({
+      uid: myUid,
+      name: state.name,
       ts: firebase.database.ServerValue.TIMESTAMP
     });
 
-    // Listen for peer's wave data
-    const peerRole = state.role === 'A' ? 'B' : 'A';
-    peerListener = roomRef.child('players/' + peerRole).on('value', (pSnap) => {
-      const pd = pSnap.val();
-      if (pd) {
-        state.peer.present = true;
-        state.peer.name = pd.name || '—';
-        state.peer.freq  = pd.freq  ?? 1.5;
-        state.peer.amp   = pd.amp   ?? 0.5;
-        state.peer.phase = pd.phase ?? 0;
-      } else {
-        // peer left
-        if (state.peer.present) {
-          state.peer.present = false;
-          state.peer.name = '—';
-          if (state.screen === 'result') {
-            const body = document.getElementById('result-body');
-            if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
-            setTimeout(() => { if (state.screen === 'result') showScreen('intro'); }, 2600);
-          } else if (state.screen === 'play') {
-            state.playing = false;
-            clearInterval(countdownInterval);
-            cancelAnimationFrame(playRAF);
-            showScreen('intro');
-          }
-          updateIntro();
+    // Watch the queue — when we see 2+ entries, the earliest one does the pairing
+    const queueWatcher = queueRef.on('value', (snap) => {
+      const entries = snap.val();
+      if (!entries) return;
+
+      const keys = Object.keys(entries);
+      if (keys.length < 2) return; // not enough people
+
+      // Sort by timestamp so pairing is deterministic
+      keys.sort((a, b) => (entries[a].ts || 0) - (entries[b].ts || 0));
+
+      // Find my position and find someone to pair with
+      const myIdx = keys.findIndex(k => entries[k].uid === myUid);
+      if (myIdx === -1) return; // I'm not in the queue anymore (already matched)
+
+      // Only the earlier entry (lower index in the sorted pair) performs the match
+      // to avoid both sides creating a room simultaneously
+      for (let i = 0; i < keys.length; i++) {
+        if (i === myIdx) continue;
+        const theirKey = keys[i];
+        const them = entries[theirKey];
+        if (them.uid === myUid) continue;
+
+        // I should only act if I'm the earlier one in this pair
+        const pairFirst = Math.min(myIdx, i);
+        if (keys[pairFirst] !== myEntryKey) {
+          // The other person is earlier — they'll do the pairing. Wait.
+          return;
         }
+
+        // I'm the earlier one — create the room
+        queueRef.off('value', queueWatcher); // stop watching
+
+        const newRoomId = db.ref('rooms').push().key;
+        const updates = {};
+        updates['assignments/' + myUid]    = { roomId: newRoomId, role: 'A' };
+        updates['assignments/' + them.uid] = { roomId: newRoomId, role: 'B' };
+        updates['rooms/' + newRoomId + '/status'] = 'waiting';
+        // Remove BOTH from queue
+        updates['queue/' + myEntryKey] = null;
+        updates['queue/' + theirKey]   = null;
+
+        db.ref().update(updates);
+        return;
       }
     });
-    // wrap so we can call peerListener() to detach
-    const detachPeer = () => roomRef.child('players/' + peerRole).off('value');
-    peerListener = detachPeer;
 
-    // Listen for room status changes
-    statusListener = roomRef.child('status').on('value', (sSnap) => {
-      const st = sSnap.val();
-      if (st === 'encounter' && state.role === 'B') {
-        // A started the encounter — B reads the target and plays animation
-        roomRef.child('target').once('value', tSnap => {
-          state.target = tSnap.val();
-          if (state.screen === 'intro') {
-            playEncounterAnimation(() => startPlay(false));
+    // Listen for my assignment (the other person might pair me)
+    const assignRef = db.ref('assignments/' + myUid);
+    assignRef.on('value', (snap) => {
+      const assignment = snap.val();
+      if (!assignment) return;
+
+      // Stop watching queue and assignment
+      queueRef.off('value');
+      assignRef.off();
+      assignRef.remove();
+      // Also clean up my queue entry just in case
+      myEntryRef.remove();
+
+      // Join the room
+      roomId = assignment.roomId;
+      state.role = assignment.role;
+      roomRef = db.ref('rooms/' + roomId);
+
+      // Write my player data
+      roomRef.child('players/' + state.role).set({
+        uid: myUid, name: state.name,
+        freq: state.me.freq, amp: state.me.amp, phase: state.me.phase,
+        ts: firebase.database.ServerValue.TIMESTAMP
+      });
+
+      // Listen for peer's wave data
+      const peerRole = state.role === 'A' ? 'B' : 'A';
+      const peerRef = roomRef.child('players/' + peerRole);
+      peerRef.on('value', (pSnap) => {
+        const pd = pSnap.val();
+        if (pd) {
+          const wasPresent = state.peer.present;
+          state.peer.present = true;
+          state.peer.name = pd.name || '—';
+          state.peer.freq  = pd.freq  ?? 1.5;
+          state.peer.amp   = pd.amp   ?? 0.5;
+          state.peer.phase = pd.phase ?? 0;
+          if (!wasPresent) {
+            updateIntro();
+            maybeStart();
           }
-        });
-      }
-      if (st === 'finished' && state.playing) {
-        roomRef.child('result').once('value', rSnap => {
-          const r = rSnap.val();
-          if (r) finishPlay(r.tier, r.matchPct, false);
-        });
-      }
+        } else {
+          if (state.peer.present) {
+            state.peer.present = false;
+            state.peer.name = '—';
+            if (state.screen === 'result') {
+              const body = document.getElementById('result-body');
+              if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
+              setTimeout(() => { if (state.screen === 'result') showScreen('intro'); }, 2600);
+            } else if (state.screen === 'play') {
+              state.playing = false;
+              clearInterval(countdownInterval);
+              cancelAnimationFrame(playRAF);
+              showScreen('intro');
+            }
+            updateIntro();
+          }
+        }
+      });
+      peerListener = () => peerRef.off('value');
+
+      // Listen for room status changes
+      const statusRef = roomRef.child('status');
+      statusRef.on('value', (sSnap) => {
+        const st = sSnap.val();
+        if (st === 'encounter' && state.role === 'B') {
+          roomRef.child('target').once('value', tSnap => {
+            state.target = tSnap.val();
+            if (state.screen === 'intro') {
+              playEncounterAnimation(() => startPlay(false));
+            }
+          });
+        }
+        if (st === 'finished' && state.playing) {
+          roomRef.child('result').once('value', rSnap => {
+            const r = rSnap.val();
+            if (r) finishPlay(r.tier, r.matchPct, false);
+          });
+        }
+      });
+      statusListener = () => statusRef.off('value');
+
+      updateIntro();
+      maybeStart();
     });
-    const detachStatus = () => roomRef.child('status').off('value');
-    statusListener = detachStatus;
-
-    updateIntro();
-    maybeStart();
-  });
-
-  // MATCHMAKER: try to pair with someone in the queue
-  // Each client tries: read the queue, if there's someone else, pair up
-  setTimeout(() => tryMatch(), 500);
-}
-
-function tryMatch() {
-  const queueRef = db.ref('queue');
-  queueRef.once('value', (snap) => {
-    const entries = snap.val();
-    if (!entries) return;
-    const keys = Object.keys(entries);
-    const others = keys.filter(k => entries[k].uid !== myUid);
-    if (others.length === 0) return; // no one else in queue yet
-
-    // Pick the first other person
-    const theirKey = others[0];
-    const them = entries[theirKey];
-
-    // Create a room
-    const newRoomId = db.ref('rooms').push().key;
-
-    // Assign roles (I'm A, they're B)
-    const updates = {};
-    updates['assignments/' + myUid]    = { roomId: newRoomId, role: 'A' };
-    updates['assignments/' + them.uid] = { roomId: newRoomId, role: 'B' };
-    updates['rooms/' + newRoomId + '/status'] = 'waiting';
-    // Remove both from queue
-    updates['queue/' + theirKey] = null;
-    // My own queue entry will be removed when assignment fires
-
-    db.ref().update(updates);
   });
 }
 
