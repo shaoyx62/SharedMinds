@@ -1463,12 +1463,19 @@ function drawResultCanvas() {
 const GALLERY_KEY = 'resonance-gallery';
 
 function saveToGallery(entry) {
+  // Clean entry — Firebase can't store undefined values
+  const clean = JSON.parse(JSON.stringify(entry));
+  console.log('[GALLERY] saving entry:', clean);
+
   // Save to localStorage as cache
   const list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
-  list.unshift(entry);
+  list.unshift(clean);
   localStorage.setItem(GALLERY_KEY, JSON.stringify(list.slice(0, 120)));
-  // Also save to Firebase so all users can see it
-  db.ref('gallery').push(entry);
+
+  // Save to Firebase
+  db.ref('gallery').push(clean)
+    .then(() => console.log('[GALLERY] saved to Firebase'))
+    .catch(err => console.error('[GALLERY] Firebase save failed:', err));
 }
 
 let galleryFilter = 'all';
@@ -1476,25 +1483,29 @@ let galleryFilter = 'all';
 function renderGallery() {
   const grid = document.getElementById('gallery-grid');
   grid.innerHTML = `<div class="gallery-empty">loading...</div>`;
-  // Load from Firebase — no orderBy to avoid index issues
+  console.log('[GALLERY] loading...');
   db.ref('gallery').limitToLast(80).once('value', (snap) => {
     let list = [];
+    console.log('[GALLERY] Firebase exists:', snap.exists(), 'numChildren:', snap.numChildren());
     if (snap.exists()) {
       snap.forEach(child => list.push(child.val()));
-      list.reverse(); // newest first
+      list.reverse();
     }
-    // Also merge any localStorage entries that might not be in Firebase
-    const local = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
-    if (list.length === 0) list = local;
+    // Merge localStorage if Firebase is empty
+    if (list.length === 0) {
+      list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
+      console.log('[GALLERY] using localStorage, count:', list.length);
+    }
     renderGalleryItems(grid, list);
   }).catch((err) => {
-    console.warn('[GALLERY] Firebase load failed, using localStorage:', err);
+    console.warn('[GALLERY] Firebase load failed:', err);
     const list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
     renderGalleryItems(grid, list);
   });
 }
 
 function renderGalleryItems(grid, list) {
+  console.log('[GALLERY] rendering', list.length, 'items, filter:', galleryFilter);
   const filtered = galleryFilter === 'all' ? list : list.filter(e => e.tier === galleryFilter);
 
   if (filtered.length === 0) {
@@ -1504,27 +1515,44 @@ function renderGalleryItems(grid, list) {
 
   grid.innerHTML = '';
   const tierLabel = { IN_PHASE: 'in phase', INTERFERENCE: 'interference', OUT_OF_PHASE: 'out of phase' };
+  const cards = [];
   filtered.forEach((entry, idx) => {
+    // Validate entry has required data
+    if (!entry || !entry.target || !entry.waveA || !entry.waveB) {
+      console.warn('[GALLERY] skipping invalid entry:', entry);
+      return;
+    }
     const card = document.createElement('div');
     card.className = 'gallery-card';
-    const label = tierLabel[entry.tier] || entry.tier;
+    const label = tierLabel[entry.tier] || entry.tier || '—';
+    const pct = typeof entry.matchPct === 'number' ? Math.round(entry.matchPct * 100) : '?';
     card.innerHTML = `
       <div class="card-canvas-wrap"><canvas></canvas></div>
       <div class="card-meta">
-        <span class="card-tier" data-tier="${entry.tier}">${label}${entry.usedAi ? ' · ai' : ''}</span>
-        <span class="card-match">${Math.round(entry.matchPct * 100)}%</span>
+        <span class="card-tier" data-tier="${entry.tier || ''}">${label}${entry.usedAi ? ' · ai' : ''}</span>
+        <span class="card-match">${pct}%</span>
       </div>
-      <div class="card-names">${escapeHtml(entry.nameA)} &times; ${escapeHtml(entry.nameB)}</div>
+      <div class="card-names">${escapeHtml(entry.nameA || '?')} &times; ${escapeHtml(entry.nameB || '?')}</div>
     `;
     grid.appendChild(card);
-    const canvas = card.querySelector('canvas');
-    drawCardCanvas(canvas, entry);
+    cards.push({ card, entry });
+  });
+
+  // Draw canvases after a brief delay so the browser has laid them out
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cards.forEach(({ card, entry }) => {
+        const canvas = card.querySelector('canvas');
+        if (canvas) drawCardCanvas(canvas, entry);
+      });
+    });
   });
 }
 
 function drawCardCanvas(canvas, entry) {
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
+  if (rect.width < 1 || rect.height < 1) return; // not laid out yet
   canvas.width  = rect.width * dpr;
   canvas.height = rect.height * dpr;
   const ctx = canvas.getContext('2d');
