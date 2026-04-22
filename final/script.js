@@ -305,6 +305,10 @@ function enterIntro() {
     document.getElementById('waiting').hidden = false;
     updateIntro();
     startWaitingSandbox();
+    // Re-join matchmaking if not already in a room
+    if (myUid && !roomRef) {
+      joinMatchmaking();
+    }
   }
 }
 
@@ -336,6 +340,10 @@ function endTutorial() {
   document.getElementById('waiting').hidden = false;
   updateIntro();
   startWaitingSandbox();
+  // Now that tutorial is done, join the matchmaking queue
+  if (myUid && !roomRef) {
+    joinMatchmaking();
+  }
 }
 
 function updateTutorialDots() {
@@ -804,10 +812,15 @@ function showAuthError(msg) {
   setTimeout(() => { authError.textContent = ''; }, 5000);
 }
 
+let authHandled = false; // prevent double-fire
+
 function onAuthSuccess(user) {
+  if (authHandled) return;
+  authHandled = true;
   myUid = user.uid;
   state.name = user.displayName || user.email?.split('@')[0] || 'anonymous';
-  joinMatchmaking();
+  // Show intro first — tutorial will play, THEN matchmaking starts
+  // after tutorial ends (or is skipped)
   showScreen('intro');
 }
 
@@ -851,7 +864,7 @@ document.getElementById('email-signup').addEventListener('click', async () => {
 
 // Auto-login if already signed in
 auth.onAuthStateChanged((user) => {
-  if (user && state.screen === 'login') {
+  if (user && state.screen === 'login' && !authHandled) {
     onAuthSuccess(user);
   }
 });
@@ -1762,6 +1775,7 @@ document.getElementById('dev-reset').addEventListener('click', () => {
   if (confirm('Clear gallery and reset?')) {
     localStorage.removeItem(GALLERY_KEY);
     leaveRoom();
+    authHandled = false;
     auth.signOut();
     location.reload();
   }
