@@ -812,15 +812,13 @@ function showAuthError(msg) {
   setTimeout(() => { authError.textContent = ''; }, 5000);
 }
 
-let authHandled = false; // prevent double-fire
+let authHandled = false;
 
 function onAuthSuccess(user) {
   if (authHandled) return;
   authHandled = true;
   myUid = user.uid;
   state.name = user.displayName || user.email?.split('@')[0] || 'anonymous';
-  // Show intro first — tutorial will play, THEN matchmaking starts
-  // after tutorial ends (or is skipped)
   showScreen('intro');
 }
 
@@ -862,12 +860,9 @@ document.getElementById('email-signup').addEventListener('click', async () => {
   }
 });
 
-// Auto-login if already signed in
-auth.onAuthStateChanged((user) => {
-  if (user && state.screen === 'login' && !authHandled) {
-    onAuthSuccess(user);
-  }
-});
+// No auto-login — always start at the login screen.
+// Sign out any stale session so the experience begins fresh.
+auth.signOut().catch(() => {});
 
 function announcePresence() {
   // No-op in Firebase version — matchmaking handles presence
