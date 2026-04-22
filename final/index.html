@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RESONANCE — a study of meeting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+<!-- Firebase SDK (compat for simplicity) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- ============ DEV PANEL: lets you switch between A and B in same browser ============ -->
+<div id="dev-panel">
+  <div class="dev-title">DEV // test harness</div>
+  <div class="dev-row">
+    <span>screen</span>
+    <button class="dev-btn" data-screen="login">login</button>
+    <button class="dev-btn" data-screen="intro">intro</button>
+    <button class="dev-btn" data-screen="play">play</button>
+    <button class="dev-btn" data-screen="result">result</button>
+    <button class="dev-btn" data-screen="gallery">gallery</button>
+  </div>
+  <div class="dev-row">
+    <span>current</span>
+    <span id="dev-current">—</span>
+  </div>
+  <div class="dev-row">
+    <button class="dev-btn dev-reset" id="dev-reset">reset all</button>
+  </div>
+</div>
+
+<!-- ============ SCREEN 1: LOGIN ============ -->
+<section class="screen" id="screen-login">
+  <div class="login-wrap">
+    <div class="eyebrow">— a study of meeting —</div>
+    <h1 class="title">RESONANCE</h1>
+    <p class="lede">
+      In this world, being on the same frequency is a kind of luck.<br/>
+      But two different waves, meeting, can make something rarer.<br/>
+      <em>Neither is possible alone.</em>
+    </p>
+
+    <!-- Google sign-in -->
+    <button class="auth-btn google-btn" id="google-login">
+      <svg class="google-icon" viewBox="0 0 24 24" width="18" height="18">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      <span>sign in with Google</span>
+    </button>
+
+    <!-- Email/password divider -->
+    <div class="auth-divider"><span>or</span></div>
+
+    <!-- Email sign-in -->
+    <div class="email-form" id="email-form">
+      <input type="email" id="email-input" placeholder="email" class="auth-input" autocomplete="email" />
+      <input type="password" id="password-input" placeholder="password" class="auth-input" autocomplete="current-password" />
+      <div class="email-btns">
+        <button class="auth-btn email-btn" id="email-login">sign in</button>
+        <button class="auth-btn email-btn secondary" id="email-signup">create account</button>
+      </div>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+
+    <div class="login-note">
+      the rest is controlled with your hands. allow camera when asked.
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 2: INTRO / TUTORIAL / WAITING ============ -->
+<section class="screen" id="screen-intro" hidden>
+  <div class="intro-wrap">
+
+    <!-- Tutorial: three chapters, canvas-driven, pure visual -->
+    <div class="tutorial" id="tutorial">
+      <canvas id="tutorial-canvas"></canvas>
+      <div class="tutorial-dots" id="tutorial-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+      <button class="tutorial-skip" id="tutorial-skip">skip &rarr;</button>
+    </div>
+
+    <!-- Waiting state: shown after tutorial. A live sandbox to practice on your own wave. -->
+    <div class="waiting" id="waiting" hidden>
+      <div class="waiting-canvas-wrap">
+        <canvas id="waiting-canvas"></canvas>
+      </div>
+
+      <div class="waiting-footer">
+        <div class="status-ring small">
+          <svg viewBox="0 0 100 100" class="ring-svg">
+            <circle cx="50" cy="50" r="46" class="ring-bg"/>
+            <circle cx="50" cy="50" r="46" class="ring-fg"/>
+          </svg>
+          <div class="ring-label">
+            <div class="ring-count" id="intro-count">1</div>
+            <div class="ring-sub">wave<span id="intro-plural">s</span></div>
+          </div>
+        </div>
+        <div class="waiting-text">
+          <h2 class="intro-title" id="intro-title">waiting for another wave</h2>
+          <p class="intro-body" id="intro-body">
+            a wave cannot meet itself.
+          </p>
+        </div>
+      </div>
+
+      <!-- Video preview: fixed to screen corner, same as play screen -->
+      <div class="video-box waiting-video-fixed">
+        <video id="waiting-video" playsinline muted></video>
+        <canvas id="waiting-hand-canvas"></canvas>
+        <div class="video-label">your hands</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ SCREEN 3: PLAY ============ -->
+<section class="screen" id="screen-play" hidden>
+  <!-- Top bar -->
+  <header class="play-header">
+    <div class="play-header-left">
+      <span class="role-badge" id="role-badge">A</span>
+      <span class="role-name" id="role-name">anonymous</span>
+    </div>
+    <div class="play-header-center">
+      <span class="countdown-label">time</span>
+      <span class="countdown" id="countdown">60</span>
+    </div>
+    <div class="play-header-right">
+      <span class="match-label">match</span>
+      <span class="match-value" id="match-value">0%</span>
+    </div>
+  </header>
+
+  <!-- Main canvas area -->
+  <main class="play-main">
+    <canvas id="wave-canvas"></canvas>
+
+    <!-- Legend overlay -->
+    <div class="legend">
+      <div class="legend-item"><span class="swatch sw-target"></span>target</div>
+      <div class="legend-item"><span class="swatch sw-combined"></span>you + them</div>
+    </div>
+
+    <!-- Video preview (bottom right) -->
+    <div class="video-box">
+      <video id="video" playsinline muted></video>
+      <canvas id="hand-canvas"></canvas>
+      <div class="video-label">your hand</div>
+    </div>
+
+    <!-- Parameter readout -->
+    <div class="param-readout">
+      <div class="param"><span class="p-name">freq</span><span class="p-val" id="p-freq">—</span></div>
+      <div class="param"><span class="p-name">amp</span><span class="p-val" id="p-amp">—</span></div>
+      <div class="param"><span class="p-name">phase</span><span class="p-val" id="p-phase">—</span></div>
+    </div>
+  </main>
+
+  <footer class="play-footer">
+    <span>right hand · left–right = frequency</span>
+    <span>right hand · up–down = amplitude</span>
+    <span>left hand · up–down = phase</span>
+  </footer>
+</section>
+
+<!-- ============ SCREEN 4: RESULT ============ -->
+<section class="screen" id="screen-result" hidden>
+  <div class="result-wrap">
+    <div class="result-tier" id="result-tier">RARE</div>
+    <h2 class="result-title" id="result-title">you met</h2>
+    <p class="result-body" id="result-body"></p>
+
+    <canvas id="result-canvas"></canvas>
+
+    <div class="result-legend">
+      <div class="legend-item"><span class="swatch sw-combined"></span>what you made together</div>
+      <div class="legend-item"><span class="swatch sw-target"></span>target</div>
+      <div class="legend-item"><span class="swatch sw-a"></span>wave A</div>
+      <div class="legend-item"><span class="swatch sw-b"></span>wave B</div>
+    </div>
+
+    <div class="result-actions">
+      <button class="primary-btn" id="meet-new-btn">meet someone new</button>
+      <button class="ghost-btn" id="to-gallery-btn">see the gallery</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SCREEN 5: GALLERY ============ -->
+<section class="screen" id="screen-gallery" hidden>
+  <header class="gallery-header">
+    <h2>GALLERY</h2>
+    <p>every meeting that has happened here</p>
+    <nav class="gallery-tabs">
+      <button class="tab active" data-tier="all">all</button>
+      <button class="tab" data-tier="IN_PHASE">in phase</button>
+      <button class="tab" data-tier="INTERFERENCE">interference</button>
+      <button class="tab" data-tier="OUT_OF_PHASE">out of phase</button>
+    </nav>
+  </header>
+  <div class="gallery-grid" id="gallery-grid"></div>
+  <div class="gallery-footer">
+    <button class="ghost-btn" id="back-to-play-btn">meet someone new</button>
+  </div>
+</section>
+
+<script src="script.js"></script>
+</body>
+</html>
