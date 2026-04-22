@@ -252,20 +252,23 @@ function joinMatchmaking() {
         }
       } else {
         if (state.peer.present) {
-          console.log('[ROOM] peer left');
+          console.log('[ROOM] peer left, current screen:', state.screen);
           state.peer.present = false;
           state.peer.name = '—';
-          if (state.screen === 'result') {
-            const body = document.getElementById('result-body');
-            if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
-            setTimeout(() => { if (state.screen === 'result') showScreen('intro'); }, 2600);
-          } else if (state.screen === 'play') {
+          if (state.screen === 'play') {
+            // Mid-game disconnect — have to stop
             state.playing = false;
             clearInterval(countdownInterval);
             cancelAnimationFrame(playRAF);
+            leaveRoom();
+            joinMatchmaking();
             showScreen('intro');
+          } else if (state.screen === 'result') {
+            // Just show a note — don't redirect, let user browse
+            const body = document.getElementById('result-body');
+            if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
           }
-          updateIntro();
+          // If on gallery or intro, do nothing — user is browsing
         }
       }
     });
@@ -1485,13 +1488,17 @@ function renderGallery() {
   grid.innerHTML = `<div class="gallery-empty">loading...</div>`;
   console.log('[GALLERY] loading...');
   db.ref('gallery').limitToLast(80).once('value', (snap) => {
+    // If we've navigated away from gallery while loading, abort
+    if (state.screen !== 'gallery') {
+      console.log('[GALLERY] screen changed during load, aborting');
+      return;
+    }
     let list = [];
     console.log('[GALLERY] Firebase exists:', snap.exists(), 'numChildren:', snap.numChildren());
     if (snap.exists()) {
       snap.forEach(child => list.push(child.val()));
       list.reverse();
     }
-    // Merge localStorage if Firebase is empty
     if (list.length === 0) {
       list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
       console.log('[GALLERY] using localStorage, count:', list.length);
@@ -1499,6 +1506,7 @@ function renderGallery() {
     renderGalleryItems(grid, list);
   }).catch((err) => {
     console.warn('[GALLERY] Firebase load failed:', err);
+    if (state.screen !== 'gallery') return;
     const list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
     renderGalleryItems(grid, list);
   });
