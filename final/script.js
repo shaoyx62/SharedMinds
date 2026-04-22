@@ -301,8 +301,11 @@ function joinMatchmaking() {
 window.addEventListener('beforeunload', () => {
   leaveRoom();
   // Also remove from queue if still there
-  if (myUid) db.ref('queue').orderByChild('uid').equalTo(myUid).once('value', s => {
-    s.forEach(c => c.ref.remove());
+  if (myUid) db.ref('queue').once('value', s => {
+    if (!s.exists()) return;
+    s.forEach(c => {
+      if (c.val() && c.val().uid === myUid) c.ref.remove();
+    });
   });
 });
 
@@ -1472,18 +1475,20 @@ let galleryFilter = 'all';
 
 function renderGallery() {
   const grid = document.getElementById('gallery-grid');
-  // Try loading from Firebase first, fall back to localStorage
-  db.ref('gallery').orderByChild('ts').limitToLast(80).once('value', (snap) => {
+  grid.innerHTML = `<div class="gallery-empty">loading...</div>`;
+  // Load from Firebase — no orderBy to avoid index issues
+  db.ref('gallery').limitToLast(80).once('value', (snap) => {
     let list = [];
     if (snap.exists()) {
       snap.forEach(child => list.push(child.val()));
       list.reverse(); // newest first
-    } else {
-      list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
     }
+    // Also merge any localStorage entries that might not be in Firebase
+    const local = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
+    if (list.length === 0) list = local;
     renderGalleryItems(grid, list);
-  }).catch(() => {
-    // Offline fallback
+  }).catch((err) => {
+    console.warn('[GALLERY] Firebase load failed, using localStorage:', err);
     const list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
     renderGalleryItems(grid, list);
   });
@@ -1572,7 +1577,7 @@ document.querySelectorAll('.gallery-tabs .tab').forEach(tab => {
 });
 
 document.getElementById('to-gallery-btn').addEventListener('click', () => {
-  leaveRoom();
+  // Just view the gallery — don't leave the room yet
   showScreen('gallery');
 });
 document.getElementById('meet-new-btn').addEventListener('click', () => {
@@ -1581,6 +1586,7 @@ document.getElementById('meet-new-btn').addEventListener('click', () => {
   showScreen('intro');
 });
 document.getElementById('back-to-play-btn').addEventListener('click', () => {
+  // From gallery, go back to find someone new
   leaveRoom();
   joinMatchmaking();
   showScreen('intro');
