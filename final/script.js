@@ -252,23 +252,20 @@ function joinMatchmaking() {
         }
       } else {
         if (state.peer.present) {
-          console.log('[ROOM] peer left, current screen:', state.screen);
+          console.log('[ROOM] peer left');
           state.peer.present = false;
           state.peer.name = '—';
-          if (state.screen === 'play') {
-            // Mid-game disconnect — have to stop
+          if (state.screen === 'result') {
+            const body = document.getElementById('result-body');
+            if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
+            setTimeout(() => { if (state.screen === 'result') showScreen('intro'); }, 2600);
+          } else if (state.screen === 'play') {
             state.playing = false;
             clearInterval(countdownInterval);
             cancelAnimationFrame(playRAF);
-            leaveRoom();
-            joinMatchmaking();
             showScreen('intro');
-          } else if (state.screen === 'result') {
-            // Just show a note — don't redirect, let user browse
-            const body = document.getElementById('result-body');
-            if (body) body.innerHTML += `<br/><span style="color: var(--ink-faint); font-size: 13px;">— they have gone —</span>`;
           }
-          // If on gallery or intro, do nothing — user is browsing
+          updateIntro();
         }
       }
     });
@@ -1170,20 +1167,20 @@ function finishPlay(tier, pct, isInitiator) {
 
   if (isInitiator) {
     send('finish', { tier, matchPct: pct });
-
-    // Only the initiator saves to gallery — avoids duplicates and ensures complete data
-    saveToGallery({
-      tier,
-      matchPct: pct,
-      target: state.target,
-      waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
-      waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
-      nameA: state.role === 'A' ? state.name : state.peer.name,
-      nameB: state.role === 'B' ? state.name : state.peer.name,
-      usedAi: !!state.aiHelper,
-      ts: Date.now(),
-    });
   }
+
+  // save to gallery
+  saveToGallery({
+    tier,
+    matchPct: pct,
+    target: state.target,
+    waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
+    waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
+    nameA: state.role === 'A' ? state.name : state.peer.name,
+    nameB: state.role === 'B' ? state.name : state.peer.name,
+    usedAi: !!state.aiHelper,
+    ts: Date.now(),
+  });
 
   // update result UI
   const tierEl = document.getElementById('result-tier');
@@ -1488,25 +1485,36 @@ function renderGallery() {
   grid.innerHTML = `<div class="gallery-empty">loading...</div>`;
   console.log('[GALLERY] loading...');
   db.ref('gallery').limitToLast(80).once('value', (snap) => {
-    // If we've navigated away from gallery while loading, abort
-    if (state.screen !== 'gallery') {
-      console.log('[GALLERY] screen changed during load, aborting');
-      return;
-    }
     let list = [];
     console.log('[GALLERY] Firebase exists:', snap.exists(), 'numChildren:', snap.numChildren());
     if (snap.exists()) {
-      snap.forEach(child => list.push(child.val()));
+      try {
+        let itemCount = 0;
+        snap.forEach(child => {
+          itemCount++;
+          try {
+            const val = child.val();
+            console.log('[GALLERY] child', itemCount, ':', val);
+            list.push(val);
+          } catch (e) {
+            console.error('[GALLERY] error processing child', itemCount, ':', e);
+          }
+        });
+        console.log('[GALLERY] forEach completed, itemCount:', itemCount, ', list length:', list.length);
+      } catch (e) {
+        console.error('[GALLERY] error in forEach:', e);
+      }
       list.reverse();
     }
+    // Merge localStorage if Firebase is empty
     if (list.length === 0) {
       list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
       console.log('[GALLERY] using localStorage, count:', list.length);
     }
+    console.log('[GALLERY] final list before rendering:', list.length, list);
     renderGalleryItems(grid, list);
   }).catch((err) => {
     console.warn('[GALLERY] Firebase load failed:', err);
-    if (state.screen !== 'gallery') return;
     const list = JSON.parse(localStorage.getItem(GALLERY_KEY) || '[]');
     renderGalleryItems(grid, list);
   });
@@ -1515,6 +1523,7 @@ function renderGallery() {
 function renderGalleryItems(grid, list) {
   console.log('[GALLERY] rendering', list.length, 'items, filter:', galleryFilter);
   const filtered = galleryFilter === 'all' ? list : list.filter(e => e.tier === galleryFilter);
+  console.log('[GALLERY] after filter:', filtered.length, 'items');
 
   if (filtered.length === 0) {
     grid.innerHTML = `<div class="gallery-empty">no meetings yet. go make one.</div>`;
@@ -1524,10 +1533,12 @@ function renderGalleryItems(grid, list) {
   grid.innerHTML = '';
   const tierLabel = { IN_PHASE: 'in phase', INTERFERENCE: 'interference', OUT_OF_PHASE: 'out of phase' };
   const cards = [];
+  let skipped = 0;
   filtered.forEach((entry, idx) => {
     // Validate entry has required data
     if (!entry || !entry.target || !entry.waveA || !entry.waveB) {
-      console.warn('[GALLERY] skipping invalid entry:', JSON.stringify(entry).slice(0, 200));
+      console.warn('[GALLERY] skipping invalid entry at', idx, ':', entry);
+      skipped++;
       return;
     }
     const card = document.createElement('div');
@@ -1545,6 +1556,7 @@ function renderGalleryItems(grid, list) {
     grid.appendChild(card);
     cards.push({ card, entry });
   });
+  console.log('[GALLERY] rendered', cards.length, 'cards, skipped', skipped);
 
   // Draw canvases after a brief delay so the browser has laid them out
   requestAnimationFrame(() => {
