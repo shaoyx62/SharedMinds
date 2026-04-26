@@ -526,7 +526,7 @@ input  { font-family: inherit; }
 }
 .match-value {
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 36px;
   font-weight: 300;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
@@ -615,10 +615,10 @@ input  { font-family: inherit; }
   justify-content: space-between;
   padding: 14px 32px;
   border-top: 1px solid var(--line);
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: var(--ink-faint);
+  color: var(--ink-dim);
 }
 
 /* ============ RESULT SCREEN ============ */
@@ -743,6 +743,12 @@ input  { font-family: inherit; }
 .card-tier[data-tier="OUT_OF_PHASE"] { color: var(--tier-out-of-phase); }
 .card-names { color: var(--ink-dim); font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; font-size: 12px; }
 .card-match { color: var(--accent); font-variant-numeric: tabular-nums; }
+.card-play {
+  color: var(--ink-faint);
+  font-size: 11px;
+  transition: color 0.2s;
+}
+.gallery-card:hover .card-play { color: var(--accent); }
 
 .gallery-empty {
   grid-column: 1 / -1;
