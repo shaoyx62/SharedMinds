@@ -323,7 +323,6 @@ const screens = {
 function showScreen(name) {
   state.screen = name;
   Object.entries(screens).forEach(([k, el]) => { el.hidden = (k !== name); });
-  document.getElementById('dev-current').textContent = name + (state.role ? ' · ' + state.role : '');
   if (name === 'gallery') renderGallery();
   if (name === 'result')  drawResultCanvas();
   if (name === 'intro')   enterIntro();
@@ -744,6 +743,13 @@ function drawChapter3(ctx, w, h, t) {
   drawHand(ctx,lhCx,lhCy,1,'#f5c16c');
   drawHand(ctx,rhCx,rhCy,1,'#d4c8b8');
 
+  // Labels under each hand
+  ctx.font='12px "JetBrains Mono",monospace';ctx.textAlign='center';
+  ctx.fillStyle=`rgba(245,193,108,${ga*0.8})`;
+  ctx.fillText('LEFT',lhCx,pY+pH-6);
+  ctx.fillStyle=`rgba(212,200,184,${ga*0.8})`;
+  ctx.fillText('RIGHT',rhCx,pY+pH-6);
+
   const wX=w*0.58,wW=w*0.36;
   ctx.save();ctx.beginPath();ctx.rect(wX,pY,wW,pH);ctx.clip();
   ctx.strokeStyle=`rgba(232,124,124,${0.9*ga})`;ctx.shadowColor=`rgba(232,124,124,${0.7*ga})`;
@@ -817,9 +823,22 @@ document.getElementById('email-signup').addEventListener('click', async () => {
   }
 });
 
-// No auto-login — always start at the login screen.
-// Sign out any stale session so the experience begins fresh.
-auth.signOut().catch(() => {});
+// Auto-login: if user is already signed in from a previous session, skip login screen
+auth.onAuthStateChanged((user) => {
+  if (user && !authHandled) {
+    onAuthSuccess(user);
+  }
+});
+
+// Logout handlers
+function doLogout() {
+  leaveRoom();
+  authHandled = false;
+  auth.signOut();
+  showScreen('login');
+}
+document.getElementById('logout-btn').addEventListener('click', doLogout);
+document.getElementById('logout-btn-gallery').addEventListener('click', doLogout);
 
 function announcePresence() {
   // No-op in Firebase version — matchmaking handles presence
@@ -1870,37 +1889,6 @@ function enableMouseFallback() {
 // ============================================================
 // DEV PANEL
 // ============================================================
-document.querySelectorAll('#dev-panel .dev-btn[data-screen]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const s = btn.dataset.screen;
-    if (s === 'play') {
-      if (!state.role) state.role = 'A';
-      state.peer = { present: true, name: 'testpeer', freq: 2, amp: 0.5, phase: Math.PI/3 };
-      state.target = state.target || randomTarget();
-      startPlay(true);
-    } else if (s === 'result') {
-      if (!state.target) state.target = randomTarget();
-      if (!state.peer.present) state.peer = { present: true, name: 'testpeer', freq: 2, amp: 0.5, phase: 0 };
-      const pct = computeMatch();
-      const tier = pct >= 0.65 ? 'IN_PHASE' : (pct >= 0.40 ? 'INTERFERENCE' : 'OUT_OF_PHASE');
-      finishPlay(tier, pct, false);
-    } else {
-      showScreen(s);
-      if (s === 'intro') updateIntro();
-    }
-  });
-});
-
-document.getElementById('dev-reset').addEventListener('click', () => {
-  if (confirm('Clear gallery and reset?')) {
-    localStorage.removeItem(GALLERY_KEY);
-    leaveRoom();
-    authHandled = false;
-    auth.signOut();
-    location.reload();
-  }
-});
-
 // ============================================================
 // UTIL
 // ============================================================
