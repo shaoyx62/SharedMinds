@@ -435,8 +435,8 @@ function startWaitingSandbox() {
 
     // user's own wave — coral/blue depending on assumed role (default coral)
     const amp = h * 0.28;
-    ctx.strokeStyle = 'rgba(124,245,196,0.9)';
-    ctx.shadowColor = 'rgba(124,245,196,0.6)';
+    ctx.strokeStyle = 'rgba(212,200,184,0.9)';
+    ctx.shadowColor = 'rgba(212,200,184,0.6)';
     ctx.shadowBlur = 12;
     ctx.lineWidth = 2.2;
     ctx.beginPath();
@@ -657,7 +657,7 @@ function drawChapter1(ctx, w, h, t) {
 
   if (glow>0.6) {
     ctx.font='italic 32px "Cormorant Garamond",serif';ctx.textAlign='center';
-    ctx.fillStyle=`rgba(124,245,196,${(glow-0.6)*2.5})`;ctx.fillText('in phase',w/2,h*0.12);
+    ctx.fillStyle=`rgba(212,200,184,${(glow-0.6)*2.5})`;ctx.fillText('in phase',w/2,h*0.12);
   }
 }
 
@@ -737,12 +737,12 @@ function drawChapter3(ctx, w, h, t) {
   const lhCx=pX+lhW*0.5, lhCy=pY+pH*(0.12+lY*0.76);
   const rhCx=rhX+rhW*(0.12+rX*0.76), rhCy=pY+pH*(0.12+rY*0.76);
 
-  if(hlRH>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRH})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhX+4,rhCy);ctx.lineTo(rhX+rhW-4,rhCy);ctx.stroke();ctx.setLineDash([]);}
-  if(hlRV>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhCx,pY+4);ctx.lineTo(rhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
+  if(hlRH>0.05){ctx.strokeStyle=`rgba(212,200,184,${0.15+0.3*hlRH})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhX+4,rhCy);ctx.lineTo(rhX+rhW-4,rhCy);ctx.stroke();ctx.setLineDash([]);}
+  if(hlRV>0.05){ctx.strokeStyle=`rgba(212,200,184,${0.15+0.3*hlRV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhCx,pY+4);ctx.lineTo(rhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
   if(hlLV>0.05){ctx.strokeStyle=`rgba(245,193,108,${0.15+0.3*hlLV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lhCx,pY+4);ctx.lineTo(lhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
 
   drawHand(ctx,lhCx,lhCy,1,'#f5c16c');
-  drawHand(ctx,rhCx,rhCy,1,'#7cf5c4');
+  drawHand(ctx,rhCx,rhCy,1,'#d4c8b8');
 
   const wX=w*0.58,wW=w*0.36;
   ctx.save();ctx.beginPath();ctx.rect(wX,pY,wW,pH);ctx.clip();
@@ -922,8 +922,8 @@ function playEncounterAnimation(onComplete) {
     ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
 
     // --- my wave (always fully visible) ---
-    ctx.strokeStyle = 'rgba(124,245,196,0.9)';
-    ctx.shadowColor = 'rgba(124,245,196,0.6)';
+    ctx.strokeStyle = 'rgba(212,200,184,0.9)';
+    ctx.shadowColor = 'rgba(212,200,184,0.6)';
     ctx.shadowBlur = 12;
     ctx.lineWidth = 2.2;
     ctx.beginPath();
@@ -979,7 +979,7 @@ function playEncounterAnimation(onComplete) {
     // --- "signal strength" ticks in the corners, suggesting a handshake ---
     if (p > 0.5) {
       const ticksAlpha = Math.min(1, (p - 0.5) / 0.3);
-      ctx.fillStyle = `rgba(124,245,196,${0.5 * ticksAlpha})`;
+      ctx.fillStyle = `rgba(212,200,184,${0.5 * ticksAlpha})`;
       ctx.font = '9px "JetBrains Mono", monospace';
       ctx.textAlign = 'left';
       ctx.fillText('· · · · signal locked', 14, 20);
@@ -1116,20 +1116,20 @@ function finishPlay(tier, pct, isInitiator) {
 
   if (isInitiator) {
     send('finish', { tier, matchPct: pct });
-  }
 
-  // save to gallery
-  saveToGallery({
-    tier,
-    matchPct: pct,
-    target: state.target,
-    waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
-    waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
-    nameA: state.role === 'A' ? state.name : state.peer.name,
-    nameB: state.role === 'B' ? state.name : state.peer.name,
-    usedAi: !!state.aiHelper,
-    ts: Date.now(),
-  });
+    // Only initiator saves to gallery (avoids duplicates)
+    saveToGallery({
+      tier,
+      matchPct: pct,
+      target: state.target,
+      waveA: state.role === 'A' ? { ...state.me } : { ...state.peer },
+      waveB: state.role === 'B' ? { ...state.me } : { ...state.peer },
+      nameA: state.role === 'A' ? state.name : state.peer.name,
+      nameB: state.role === 'B' ? state.name : state.peer.name,
+      usedAi: !!state.aiHelper,
+      ts: Date.now(),
+    });
+  }
 
   // update result UI
   const tierEl = document.getElementById('result-tier');
@@ -1743,7 +1743,7 @@ async function initHandTrackingOnce() {
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(245,193,108,0.55)';
         ctx.fillText('PHASE', cvs.width * 0.25, 14);
-        ctx.fillStyle = 'rgba(124,245,196,0.55)';
+        ctx.fillStyle = 'rgba(212,200,184,0.55)';
         ctx.fillText('FREQ / AMP', cvs.width * 0.75, 14);
         ctx.restore();
       });
@@ -1782,7 +1782,7 @@ async function initHandTrackingOnce() {
       };
 
       drawOnBoth((ctx, cvs) => {
-        if (rightHand) drawSkeleton(ctx, cvs, rightHand, 'rgba(124,245,196,0.9)');
+        if (rightHand) drawSkeleton(ctx, cvs, rightHand, 'rgba(212,200,184,0.9)');
         if (leftHand)  drawSkeleton(ctx, cvs, leftHand,  'rgba(245,193,108,0.9)');
       });
 
