@@ -331,7 +331,7 @@ function showScreen(name) {
 // ============================================================
 // TUTORIAL — canvas-driven, three chapters, minimal text
 // ============================================================
-let tutorialPlayed = false;   // only play once per session
+let tutorialPlayed = sessionStorage.getItem('tutorialDone') === '1';
 let tutorialRAF = null;
 let tutorialStart = 0;
 let tutorialChapter = 0;
@@ -345,6 +345,7 @@ const TUTORIAL_CHAPTERS = [
 function enterIntro() {
   if (!tutorialPlayed) {
     tutorialPlayed = true;
+    sessionStorage.setItem('tutorialDone', '1');
     document.getElementById('tutorial').hidden = false;
     document.getElementById('waiting').hidden = true;
     startTutorial();
@@ -603,7 +604,7 @@ function drawChapter0(ctx, w, h, t) {
   ctx.beginPath();ctx.moveTo(0,(yC+yB)/2);ctx.lineTo(w,(yC+yB)/2);ctx.stroke();
 
   // Labels — bigger, brighter
-  ctx.font='italic 28px "Cormorant Garamond",serif';ctx.textAlign='left';
+  ctx.font='28px "JetBrains Mono",monospace';ctx.textAlign='left';
   if (alA>0.1) { ctx.fillStyle=`rgba(232,124,124,${alA*0.9})`;ctx.fillText('A',18,yA+8); }
   if (alB>0.1) { ctx.fillStyle=`rgba(124,180,232,${alB*0.9})`;ctx.fillText('B',18,yB+8); }
   if (alC>0.1) { ctx.fillStyle=`rgba(232,200,220,${alC*0.9})`;ctx.fillText('A + B',18,yC+8); }
@@ -650,12 +651,12 @@ function drawChapter1(ctx, w, h, t) {
     ctx.shadowBlur=0;
   }
   // Labels — bigger, brighter
-  ctx.font='italic 20px "Cormorant Garamond",serif';ctx.textAlign='left';
+  ctx.font='20px "JetBrains Mono",monospace';ctx.textAlign='left';
   if (alT>0.3) { ctx.fillStyle=`rgba(245,193,108,${alT*0.9})`;ctx.fillText('target',18,yT-amp-10); }
   if (alC>0.3) { ctx.fillStyle=`rgba(232,200,220,${alC*0.9})`;ctx.fillText('A + B',18,yC-amp-10); }
 
   if (glow>0.6) {
-    ctx.font='italic 32px "Cormorant Garamond",serif';ctx.textAlign='center';
+    ctx.font='32px "JetBrains Mono",monospace';ctx.textAlign='center';
     ctx.fillStyle=`rgba(212,200,184,${(glow-0.6)*2.5})`;ctx.fillText('in phase',w/2,h*0.12);
   }
 }
@@ -687,7 +688,7 @@ function drawChapter2(ctx, w, h, t) {
   ctx.setLineDash([]);
 
   // "you" label
-  ctx.font='italic 22px "Cormorant Garamond",serif';ctx.textAlign='center';
+  ctx.font='22px "JetBrains Mono",monospace';ctx.textAlign='center';
   ctx.fillStyle='rgba(232,124,124,0.85)';ctx.fillText('you',hcx,h*0.08);
 
   // waves in clipped area
@@ -699,7 +700,7 @@ function drawChapter2(ctx, w, h, t) {
   drawTwistedWave(ctx,waveAreaW,yComb,amp*1.3,1,2,
     x=>myAmp*Math.sin(myFreq*x+t*0.002)+peerAmp*Math.sin(peerFreq*x+peerPhase));
 
-  ctx.font='italic 18px "Cormorant Garamond",serif';ctx.textAlign='left';
+  ctx.font='18px "JetBrains Mono",monospace';ctx.textAlign='left';
   ctx.fillStyle='rgba(232,124,124,0.9)';ctx.fillText('your wave',8,yMy-amp-12);
   ctx.fillStyle='rgba(232,200,220,0.9)';ctx.fillText('combined',8,yComb-amp*1.3-12);
 
@@ -834,6 +835,8 @@ auth.onAuthStateChanged((user) => {
 function doLogout() {
   leaveRoom();
   authHandled = false;
+  tutorialPlayed = false;
+  sessionStorage.removeItem('tutorialDone');
   auth.signOut();
   showScreen('login');
 }
