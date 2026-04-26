@@ -395,9 +395,7 @@ function endTutorial() {
 }
 
 function updateTutorialDots() {
-  document.querySelectorAll('#tutorial-dots .dot').forEach((d, i) => {
-    d.classList.toggle('active', i === tutorialChapter);
-  });
+  // dots removed — no-op
 }
 
 // ============================================================
@@ -1113,22 +1111,56 @@ function startPlay(isInitiator) {
   state.playing = true;
   state.timeLeft = PLAY_DURATION;
   state.aiHelper = null;
-  // reset my wave to a neutral start
   state.me = { freq: 1.5, amp: 0.5, phase: 0 };
 
   // role badge
   document.getElementById('role-badge').textContent = state.role;
   document.getElementById('role-name').textContent = state.name;
 
+  // Update briefing with role info and color
+  document.getElementById('briefing-role-letter').textContent = state.role;
+  // Set "your wave" swatch color based on role
+  const yourSwatches = document.querySelectorAll('.sw-yours');
+  const yourColor = state.role === 'A' ? 'var(--wave-a)' : 'var(--wave-b)';
+  yourSwatches.forEach(s => {
+    s.style.background = yourColor;
+    s.style.boxShadow = `0 0 4px ${yourColor}`;
+  });
+
   showScreen('play');
   resizeWaveCanvas();
-  startWaveLoop();
 
-  // Audio: start BGM drone and wave sonification
+  // Show briefing overlay first
+  const overlay = document.getElementById('briefing-overlay');
+  const countdownEl = document.getElementById('briefing-countdown');
+  overlay.classList.remove('hidden');
+  let briefingTime = 4;
+  countdownEl.textContent = briefingTime;
+
+  const briefingInterval = setInterval(() => {
+    briefingTime--;
+    if (briefingTime <= 0) {
+      clearInterval(briefingInterval);
+      overlay.classList.add('hidden');
+      // NOW start the actual game
+      beginGameplay();
+    } else {
+      countdownEl.textContent = briefingTime;
+    }
+  }, 1000);
+
+  // initialize MediaPipe hand tracking
+  initHandTrackingOnce();
+}
+
+function beginGameplay() {
+  // Start wave rendering, audio, and game countdown
+  startWaveLoop();
   startBGM();
   startWaveSound();
 
   clearInterval(countdownInterval);
+  document.getElementById('countdown').textContent = state.timeLeft;
   countdownInterval = setInterval(() => {
     state.timeLeft -= 1;
     document.getElementById('countdown').textContent = state.timeLeft;
@@ -1137,9 +1169,6 @@ function startPlay(isInitiator) {
       finalizeResult();
     }
   }, 1000);
-
-  // initialize MediaPipe hand tracking the first time
-  initHandTrackingOnce();
 }
 
 function finalizeResult() {
