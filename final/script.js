@@ -661,15 +661,17 @@ function drawChapter1(ctx, w, h, t) {
   }
 }
 
-// ---- CH 2: "you" control one wave — hand appears, combined responds ----
+// ---- CH 2: "you" control one wave — hand moves freely, combined responds ----
 function drawChapter2(ctx, w, h, t) {
   const T = TUTORIAL_CHAPTERS[2].dur;
   const alphaAll = Math.min(1,t/600) * Math.max(0,1-Math.max(0,t-(T-500))/500);
   const handAreaW = w*0.32, waveAreaX = w*0.38, waveAreaW = w*0.58;
 
-  const handP = (t/4000)%1;
-  const handY = 0.3 + 0.4*Math.sin(handP*Math.PI*2);
-  const myFreq = 1+handY*2.5, myAmp = 0.3+(1-handY)*0.5;
+  // Hand moves in a natural 2D path (Lissajous-like)
+  const handP = t / 3500;
+  const handX = 0.5 + 0.3 * Math.sin(handP * Math.PI * 2);
+  const handY = 0.3 + 0.4 * Math.sin(handP * Math.PI * 2 * 1.3 + 0.5);
+  const myFreq = 1+handX*2.5, myAmp = 0.3+(1-handY)*0.5;
   const peerFreq=2, peerAmp=0.5, peerPhase=1;
   const amp = h*0.12;
   const yMy = h*0.3, yComb = h*0.7;
@@ -709,21 +711,21 @@ function drawChapter2(ctx, w, h, t) {
   ctx.globalAlpha=1;
 }
 
-// ---- CH 3: free-form hand gesture demo — hands move naturally ----
+// ---- CH 3: structured two-hand gesture teaching (right=freq/amp, left=phase) ----
 function drawChapter3(ctx, w, h, t) {
   const T = TUTORIAL_CHAPTERS[3].dur;
   const pX=w*0.08, pW=w*0.46, pY=h*0.12, pH=h*0.76;
   const lhW=pW*0.32, rhX=pX+pW*0.38, rhW=pW*0.60;
-
+  let rX=0.5,rY=0.5,lY=0.5,hlRH=0,hlRV=0,hlLV=0;
   const fi=Math.min(1,t/600), fo=Math.max(0,1-Math.max(0,t-(T-400))/400);
   const ga=fi*fo;
 
-  // Both hands move freely in 2D using Lissajous-like paths
-  const rP = t / 3500;
-  const rX = 0.5 + 0.35 * Math.sin(rP * Math.PI * 2);
-  const rY = 0.5 + 0.35 * Math.sin(rP * Math.PI * 2 * 1.3 + 0.5);
-  const lP = t / 4200;
-  const lY = 0.5 + 0.35 * Math.sin(lP * Math.PI * 2);
+  if (t<600){}
+  else if(t<4600){const p=(t-600)/4000;rX=0.5-0.4*Math.sin(p*Math.PI*2);hlRH=Math.sin(p*Math.PI);}
+  else if(t<5100){rX=0.5;}
+  else if(t<9100){const p=(t-5100)/4000;rY=0.5-0.4*Math.sin(p*Math.PI*2);hlRV=Math.sin(p*Math.PI);}
+  else if(t<9600){rY=0.5;}
+  else{const p=(t-9600)/(T-10000);lY=0.5-0.4*Math.sin(p*Math.PI*2);hlLV=Math.sin(Math.min(1,p)*Math.PI);}
 
   const fD=0.8+rX*3.5, aD=0.2+(1-rY)*0.8, phD=lY*Math.PI*2;
   ctx.globalAlpha=ga;
@@ -734,6 +736,10 @@ function drawChapter3(ctx, w, h, t) {
 
   const lhCx=pX+lhW*0.5, lhCy=pY+pH*(0.12+lY*0.76);
   const rhCx=rhX+rhW*(0.12+rX*0.76), rhCy=pY+pH*(0.12+rY*0.76);
+
+  if(hlRH>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRH})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhX+4,rhCy);ctx.lineTo(rhX+rhW-4,rhCy);ctx.stroke();ctx.setLineDash([]);}
+  if(hlRV>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhCx,pY+4);ctx.lineTo(rhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
+  if(hlLV>0.05){ctx.strokeStyle=`rgba(245,193,108,${0.15+0.3*hlLV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lhCx,pY+4);ctx.lineTo(lhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
 
   drawHand(ctx,lhCx,lhCy,1,'#f5c16c');
   drawHand(ctx,rhCx,rhCy,1,'#7cf5c4');
@@ -1025,12 +1031,16 @@ function startPlay(isInitiator) {
   // Update briefing wave color based on role
   const briefingWave = document.getElementById('briefing-wave-icon');
   const wavePath = briefingWave.querySelector('path');
+  // Also update the play legend swatch
+  const yoursSwatch = document.querySelector('.sw-yours');
   if (state.role === 'A') {
     wavePath.setAttribute('stroke', 'rgba(232,124,124,0.95)');
     briefingWave.style.color = '#e87c7c';
+    if (yoursSwatch) { yoursSwatch.style.background = 'var(--wave-a)'; yoursSwatch.style.boxShadow = '0 0 4px var(--wave-a)'; }
   } else {
     wavePath.setAttribute('stroke', 'rgba(124,180,232,0.95)');
     briefingWave.style.color = '#7cb4e8';
+    if (yoursSwatch) { yoursSwatch.style.background = 'var(--wave-b)'; yoursSwatch.style.boxShadow = '0 0 4px var(--wave-b)'; }
   }
 
   showScreen('play');
@@ -1098,6 +1108,11 @@ function finishPlay(tier, pct, isInitiator) {
   stopWaveSound();
   stopBGM();
   playResultChime(tier);
+
+  // Play the combined wave as a melody
+  const waveA = state.role === 'A' ? state.me : state.peer;
+  const waveB = state.role === 'B' ? state.me : state.peer;
+  playCombinedMelody(waveA, waveB);
 
   if (isInitiator) {
     send('finish', { tier, matchPct: pct });
@@ -1423,11 +1438,31 @@ function drawResultCanvas() {
   drawOn(ctx, 'rgba(124,180,232,0.45)', 'rgba(124,180,232,0.2)', 1, (x) =>
     waveB.amp * Math.sin(waveB.freq * x + waveB.phase)
   );
-  // COMBINED wave A+B — the main event, bright and thick
-  drawOn(ctx, 'rgba(124,245,196,1)', 'rgba(124,245,196,0.9)', 2.5, (x) =>
+  // COMBINED wave A+B — twisted red-blue, bright
+  const combinedFn = (x) =>
     waveA.amp * Math.sin(waveA.freq * x + waveA.phase) +
-    waveB.amp * Math.sin(waveB.freq * x + waveB.phase)
-  );
+    waveB.amp * Math.sin(waveB.freq * x + waveB.phase);
+  // Twisted combined — alternating red/blue segments, bright
+  const N = SAMPLE_POINTS;
+  const segLen = 4;
+  ctx.lineWidth = 2.5;
+  ctx.shadowBlur = 12;
+  for (let i = 0; i < N; i++) {
+    const px0 = (i/N)*w, px1 = ((i+1)/N)*w;
+    const x0 = (i/N)*X_RANGE, x1 = ((i+1)/N)*X_RANGE;
+    const y0 = cy - combinedFn(x0)*ampScale;
+    const y1 = cy - combinedFn(x1)*ampScale;
+    const seg = Math.floor(i/segLen)%2;
+    if (seg===0) {
+      ctx.strokeStyle='rgba(232,124,124,0.95)';
+      ctx.shadowColor='rgba(232,124,124,0.6)';
+    } else {
+      ctx.strokeStyle='rgba(124,180,232,0.95)';
+      ctx.shadowColor='rgba(124,180,232,0.6)';
+    }
+    ctx.beginPath(); ctx.moveTo(px0,y0); ctx.lineTo(px1,y1); ctx.stroke();
+  }
+  ctx.shadowBlur = 0;
 }
 
 // ============================================================
@@ -1522,10 +1557,16 @@ function renderGalleryItems(grid, list) {
       <div class="card-canvas-wrap"><canvas></canvas></div>
       <div class="card-meta">
         <span class="card-tier" data-tier="${entry.tier || ''}">${label}${entry.usedAi ? ' · ai' : ''}</span>
+        <span class="card-play">▶</span>
         <span class="card-match">${pct}%</span>
       </div>
       <div class="card-names">${escapeHtml(entry.nameA || '?')} &times; ${escapeHtml(entry.nameB || '?')}</div>
     `;
+    // Click to play the combined wave melody
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      playCombinedMelody(entry.waveA, entry.waveB);
+    });
     grid.appendChild(card);
     cards.push({ card, entry });
   });
@@ -1583,9 +1624,21 @@ function drawCardCanvas(canvas, entry) {
     A.amp*Math.sin(A.freq*x+A.phase));
   paint('rgba(124,180,232,0.35)','rgba(124,180,232,0.15)',0.8, x =>
     B.amp*Math.sin(B.freq*x+B.phase));
-  // COMBINED A+B — the main line, bright
-  paint('rgba(124,245,196,1)','rgba(124,245,196,0.8)',2, x =>
-    A.amp*Math.sin(A.freq*x+A.phase) + B.amp*Math.sin(B.freq*x+B.phase));
+  // COMBINED A+B — twisted red-blue, bright
+  const combinedFn = x => A.amp*Math.sin(A.freq*x+A.phase) + B.amp*Math.sin(B.freq*x+B.phase);
+  const segLen = 3;
+  ctx.lineWidth = 2;
+  ctx.shadowBlur = 8;
+  for (let i=0;i<SAMPLE_POINTS;i++){
+    const px0=(i/SAMPLE_POINTS)*w, px1=((i+1)/SAMPLE_POINTS)*w;
+    const x0=(i/SAMPLE_POINTS)*X_RANGE, x1=((i+1)/SAMPLE_POINTS)*X_RANGE;
+    const y0=cy-combinedFn(x0)*ampScale, y1=cy-combinedFn(x1)*ampScale;
+    const seg=Math.floor(i/segLen)%2;
+    if(seg===0){ctx.strokeStyle='rgba(232,124,124,0.9)';ctx.shadowColor='rgba(232,124,124,0.5)';}
+    else{ctx.strokeStyle='rgba(124,180,232,0.9)';ctx.shadowColor='rgba(124,180,232,0.5)';}
+    ctx.beginPath();ctx.moveTo(px0,y0);ctx.lineTo(px1,y1);ctx.stroke();
+  }
+  ctx.shadowBlur=0;
 }
 
 document.querySelectorAll('.gallery-tabs .tab').forEach(tab => {
@@ -2053,7 +2106,6 @@ function playResultChime(tier) {
   g.gain.value = 0.15;
 
   if (tier === 'IN_PHASE' || tier === 'INTERFERENCE') {
-    // rising major chord arpeggio
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(220, now);
     osc.frequency.setValueAtTime(277, now + 0.15);
@@ -2063,13 +2115,68 @@ function playResultChime(tier) {
     osc.start(now);
     osc.stop(now + 1);
   } else {
-    // gentle descending tone
     osc.type = 'sine';
     osc.frequency.setValueAtTime(330, now);
     osc.frequency.setTargetAtTime(220, now, 0.4);
     g.gain.setTargetAtTime(0, now + 0.5, 0.3);
     osc.start(now);
     osc.stop(now + 1);
+  }
+}
+
+// Play the combined wave shape as a melody — samples the waveform and maps to notes
+function playCombinedMelody(waveA, waveB) {
+  if (!audioCtx) initAudio();
+  if (!audioCtx) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  const notes = [
+    130.81, 146.83, 164.81, 196.00, 220.00,
+    261.63, 293.66, 329.63, 392.00, 440.00,
+    523.25, 587.33, 659.26
+  ];
+  const numSamples = 16;
+  const noteDur = 0.2;
+  const now = audioCtx.currentTime + 0.5; // slight delay after chime
+
+  // Create two chorus oscillators for the A+B combined sound
+  for (let s = 0; s < numSamples; s++) {
+    const x = (s / numSamples) * Math.PI * 4;
+    const val = (waveA.amp * Math.sin(waveA.freq * x + waveA.phase) +
+                 waveB.amp * Math.sin(waveB.freq * x + waveB.phase));
+    // Map combined value (-2..2) to note index (0..12)
+    const normVal = (val + 2) / 4; // 0..1
+    const noteIdx = Math.floor(normVal * (notes.length - 1));
+    const freq = notes[Math.max(0, Math.min(notes.length - 1, noteIdx))];
+
+    const t = now + s * noteDur;
+
+    // Main tone
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.08, t + 0.02);
+    g.gain.linearRampToValueAtTime(0, t + noteDur - 0.02);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + noteDur);
+
+    // Chorus: slightly detuned copy
+    const osc2 = audioCtx.createOscillator();
+    const g2 = audioCtx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(freq, t);
+    osc2.detune.setValueAtTime(15, t);
+    g2.gain.setValueAtTime(0, t);
+    g2.gain.linearRampToValueAtTime(0.04, t + 0.02);
+    g2.gain.linearRampToValueAtTime(0, t + noteDur - 0.02);
+    osc2.connect(g2);
+    g2.connect(audioCtx.destination);
+    osc2.start(t);
+    osc2.stop(t + noteDur);
   }
 }
 
