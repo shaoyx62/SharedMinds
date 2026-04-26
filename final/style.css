@@ -11,16 +11,16 @@
   --ink-faint: #4a4740;
   --line: #1e2428;
 
-  --accent: #7cf5c4;          /* combined wave — phosphor teal */
-  --accent-dim: #3a6b58;
-  --target: #f5c16c;          /* target wave — amber */
+  --accent: #d4c8b8;            /* warm pearl — UI accent, not wave-specific */
+  --accent-dim: #6b6358;
+  --target: #f5c16c;            /* target wave — amber */
   --target-dim: #6b5530;
-  --wave-a: #e87c7c;          /* wave A — coral */
-  --wave-b: #7cb4e8;          /* wave B — steel blue */
+  --wave-a: #e87c7c;            /* wave A — coral */
+  --wave-b: #7cb4e8;            /* wave B — steel blue */
 
-  --tier-in-phase: #7cf5c4;
+  --tier-in-phase: #d4c8b8;
   --tier-interference: #f5c16c;
-  --tier-out-of-phase: #8a8578;
+  --tier-out-of-phase: #6b6358;
 
   --serif: 'Cormorant Garamond', serif;
   --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
@@ -536,7 +536,7 @@ input  { font-family: inherit; }
   flex: 1;
   position: relative;
   background:
-    radial-gradient(ellipse at center, rgba(124,245,196,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse at center, rgba(212,200,184,0.03) 0%, transparent 60%),
     var(--bg);
   overflow: hidden;
 }
@@ -562,7 +562,11 @@ input  { font-family: inherit; }
 .legend-item { display: flex; align-items: center; gap: 8px; }
 .swatch { width: 20px; height: 2px; display: inline-block; }
 .sw-target { background: var(--target); box-shadow: 0 0 4px var(--target); }
-.sw-combined { background: var(--accent); box-shadow: 0 0 4px var(--accent); }
+.sw-combined { background: linear-gradient(90deg, var(--wave-a) 0%, var(--wave-a) 50%, var(--wave-b) 50%, var(--wave-b) 100%); background-size: 6px 100%; }
+.sw-twisted {
+  background: repeating-linear-gradient(90deg, var(--wave-a) 0px, var(--wave-a) 3px, var(--wave-b) 3px, var(--wave-b) 6px);
+  box-shadow: 0 0 4px rgba(200,150,180,0.5);
+}
 .sw-a { background: var(--wave-a); box-shadow: 0 0 4px var(--wave-a); }
 .sw-b { background: var(--wave-b); box-shadow: 0 0 4px var(--wave-b); }
 
@@ -760,7 +764,6 @@ input  { font-family: inherit; }
   font-size: 17px;
 }
 
-.gallery-footer {
-  margin-top: 32px;
-  text-align: center;
+.gallery-action {
+  margin-top: 16px;
 }
