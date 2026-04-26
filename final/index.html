@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RESONANCE — a study of meeting</title>
+<title>IN PHASE — a study of meeting</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>〰</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,31 +16,11 @@
 </head>
 <body>
 
-<!-- ============ DEV PANEL: lets you switch between A and B in same browser ============ -->
-<div id="dev-panel">
-  <div class="dev-title">DEV // test harness</div>
-  <div class="dev-row">
-    <span>screen</span>
-    <button class="dev-btn" data-screen="login">login</button>
-    <button class="dev-btn" data-screen="intro">intro</button>
-    <button class="dev-btn" data-screen="play">play</button>
-    <button class="dev-btn" data-screen="result">result</button>
-    <button class="dev-btn" data-screen="gallery">gallery</button>
-  </div>
-  <div class="dev-row">
-    <span>current</span>
-    <span id="dev-current">—</span>
-  </div>
-  <div class="dev-row">
-    <button class="dev-btn dev-reset" id="dev-reset">reset all</button>
-  </div>
-</div>
-
 <!-- ============ SCREEN 1: LOGIN ============ -->
 <section class="screen" id="screen-login">
   <div class="login-wrap">
     <div class="eyebrow">— a study of meeting —</div>
-    <h1 class="title">RESONANCE</h1>
+    <h1 class="title">IN PHASE</h1>
     <p class="lede">
       In this world, being on the same frequency is a kind of luck.<br/>
       But two different waves, meeting, can make something rarer.<br/>
@@ -93,6 +73,7 @@
     <!-- Waiting state: shown after tutorial. A live sandbox to practice on your own wave. -->
     <div class="waiting" id="waiting" hidden>
       <div class="waiting-canvas-wrap">
+        <div class="practice-hint">move your hands to practice</div>
         <canvas id="waiting-canvas"></canvas>
       </div>
 
@@ -153,6 +134,7 @@
     <div class="play-header-left">
       <span class="role-badge" id="role-badge">A</span>
       <span class="role-name" id="role-name">anonymous</span>
+      <button class="logout-btn" id="logout-btn">logout</button>
     </div>
     <div class="play-header-center">
       <span class="match-label">match</span>
@@ -232,6 +214,7 @@
     </nav>
     <div class="gallery-action">
       <button class="ghost-btn" id="back-to-play-btn">meet someone new</button>
+      <button class="logout-btn" id="logout-btn-gallery">logout</button>
     </div>
   </header>
   <div class="gallery-grid" id="gallery-grid"></div>
