@@ -396,13 +396,13 @@ input  { font-family: inherit; }
 }
 .tutorial-label {
   font-family: var(--mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.3em;
   text-transform: uppercase;
-  color: var(--ink-dim);
+  color: var(--ink);
   margin-bottom: 16px;
-  padding: 6px 16px;
-  border: 1px solid var(--line);
+  padding: 8px 20px;
+  border: 1px solid var(--ink-dim);
 }
 #tutorial-canvas {
   width: 100%;
@@ -447,22 +447,23 @@ input  { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 14px;
   font-family: var(--serif);
-  font-size: 22px;
+  font-size: 28px;
   font-style: italic;
   color: var(--ink);
+  margin-bottom: 20px;
+}
+.briefing-line.sub {
+  font-size: 24px;
+  color: var(--ink-dim);
   margin-bottom: 36px;
 }
-.briefing-line .swatch {
-  width: 40px;
-  height: 4px;
-  display: inline-block;
-  border-radius: 2px;
+.briefing-wave-svg {
+  filter: drop-shadow(0 0 6px currentColor);
 }
-.briefing-swatch {
-  background: var(--wave-a);
-  box-shadow: 0 0 6px var(--wave-a);
+.briefing-target-svg {
+  filter: drop-shadow(0 0 4px rgba(245,193,108,0.5));
 }
 .briefing-countdown {
   font-family: var(--serif);
