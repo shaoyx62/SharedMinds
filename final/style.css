@@ -84,7 +84,7 @@ input  { font-family: inherit; }
   position: relative;
 }
 .eyebrow {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-style: italic;
   font-size: 15px;
   color: var(--ink-dim);
@@ -92,10 +92,10 @@ input  { font-family: inherit; }
   margin-bottom: 24px;
 }
 .title {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-weight: 300;
-  font-size: 104px;
-  letter-spacing: 0.08em;
+  font-size: 72px;
+  letter-spacing: 0.12em;
   line-height: 1;
   margin-bottom: 40px;
   background: linear-gradient(180deg, var(--ink) 0%, var(--ink-dim) 100%);
@@ -104,7 +104,7 @@ input  { font-family: inherit; }
   -webkit-text-fill-color: transparent;
 }
 .lede {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 20px;
   line-height: 1.6;
   color: var(--ink-dim);
@@ -321,7 +321,7 @@ input  { font-family: inherit; }
   justify-content: center;
 }
 .ring-count {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 48px;
   font-weight: 300;
   line-height: 1;
@@ -340,15 +340,15 @@ input  { font-family: inherit; }
   flex: 1;
 }
 .intro-title {
-  font-family: var(--serif);
-  font-size: 32px;
+  font-family: var(--mono);
+  font-size: 24px;
   font-weight: 300;
-  font-style: italic;
+  letter-spacing: 0.1em;
   margin-bottom: 12px;
   color: var(--ink);
 }
 .intro-body {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 16px;
   line-height: 1.6;
   color: var(--ink-dim);
@@ -417,14 +417,14 @@ input  { font-family: inherit; }
   align-items: center;
   justify-content: center;
   gap: 14px;
-  font-family: var(--serif);
-  font-size: 28px;
-  font-style: italic;
+  font-family: var(--mono);
+  font-size: 18px;
+  letter-spacing: 0.1em;
   color: var(--ink);
   margin-bottom: 20px;
 }
 .briefing-line.sub {
-  font-size: 24px;
+  font-size: 16px;
   color: var(--ink-dim);
   margin-bottom: 36px;
 }
@@ -435,7 +435,7 @@ input  { font-family: inherit; }
   filter: drop-shadow(0 0 4px rgba(245,193,108,0.5));
 }
 .briefing-countdown {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 64px;
   font-weight: 300;
   color: var(--accent);
@@ -487,14 +487,14 @@ input  { font-family: inherit; }
   color: var(--ink-faint);
 }
 .countdown {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 28px;
   font-weight: 300;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 .match-value {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 36px;
   font-weight: 300;
   color: var(--accent);
@@ -614,14 +614,14 @@ input  { font-family: inherit; }
 .result-tier[data-tier="OUT_OF_PHASE"] { color: var(--tier-out-of-phase); }
 
 .result-title {
-  font-family: var(--serif);
-  font-size: 54px;
+  font-family: var(--mono);
+  font-size: 36px;
   font-weight: 300;
-  font-style: italic;
+  letter-spacing: 0.1em;
   margin-bottom: 16px;
 }
 .result-body {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-size: 17px;
   color: var(--ink-dim);
   line-height: 1.7;
@@ -663,15 +663,14 @@ input  { font-family: inherit; }
 }
 .gallery-header { text-align: center; margin-bottom: 32px; }
 .gallery-header h2 {
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-weight: 300;
-  font-size: 56px;
-  letter-spacing: 0.1em;
+  font-size: 40px;
+  letter-spacing: 0.15em;
   margin-bottom: 8px;
 }
 .gallery-header p {
-  font-family: var(--serif);
-  font-style: italic;
+  font-family: var(--mono);
   color: var(--ink-dim);
   margin-bottom: 24px;
 }
@@ -714,7 +713,7 @@ input  { font-family: inherit; }
 .card-tier[data-tier="IN_PHASE"]     { color: var(--tier-in-phase); }
 .card-tier[data-tier="INTERFERENCE"] { color: var(--tier-interference); }
 .card-tier[data-tier="OUT_OF_PHASE"] { color: var(--tier-out-of-phase); }
-.card-names { color: var(--ink-dim); font-family: var(--serif); font-style: italic; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.card-names { color: var(--ink-dim); font-family: var(--mono); font-style: italic; text-transform: none; letter-spacing: 0; font-size: 12px; }
 .card-match { color: var(--accent); font-variant-numeric: tabular-nums; }
 .card-play {
   color: var(--ink-faint);
@@ -728,7 +727,7 @@ input  { font-family: inherit; }
   text-align: center;
   padding: 80px 0;
   color: var(--ink-faint);
-  font-family: var(--serif);
+  font-family: var(--mono);
   font-style: italic;
   font-size: 17px;
 }
