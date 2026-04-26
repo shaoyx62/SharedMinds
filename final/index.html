@@ -129,28 +129,16 @@
 <!-- ============ SCREEN 3: PLAY ============ -->
 <section class="screen" id="screen-play" hidden>
 
-  <!-- BRIEFING OVERLAY — shown for a few seconds before countdown starts -->
+  <!-- BRIEFING OVERLAY — 3 seconds before game starts -->
   <div class="briefing-overlay" id="briefing-overlay">
     <div class="briefing-card">
-      <div class="briefing-title">get ready</div>
-      <div class="briefing-waves">
-        <div class="briefing-row">
-          <span class="swatch sw-yours"></span>
-          <span class="briefing-text">this is <strong>your wave</strong> — move your hands to shape it</span>
-        </div>
-        <div class="briefing-row">
-          <span class="swatch sw-combined"></span>
-          <span class="briefing-text">this is <strong>you + them</strong> combined</span>
-        </div>
-        <div class="briefing-row">
-          <span class="swatch sw-target"></span>
-          <span class="briefing-text">this is the <strong>target</strong> — match it together</span>
-        </div>
+      <div class="briefing-line">
+        <span>you are the</span>
+        <span class="swatch briefing-swatch" id="briefing-swatch"></span>
+        <span>wave — match the</span>
+        <span class="swatch sw-target"></span>
       </div>
-      <div class="briefing-role">
-        you are wave <strong id="briefing-role-letter">A</strong>
-      </div>
-      <div class="briefing-countdown" id="briefing-countdown">4</div>
+      <div class="briefing-countdown" id="briefing-countdown">3</div>
     </div>
   </div>
 
