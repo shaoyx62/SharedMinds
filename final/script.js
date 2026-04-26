@@ -337,9 +337,10 @@ let tutorialRAF = null;
 let tutorialStart = 0;
 let tutorialChapter = 0;
 const TUTORIAL_CHAPTERS = [
-  { dur: 5000 },   // one wave alone
-  { dur: 14000 },  // A and B changing → C responds (main gameplay concept)
-  { dur: 14000 },  // hand gestures, larger/slower
+  { dur: 12000 },  // Ch0: A + B = combined wave (core concept)
+  { dur: 10000 },  // Ch1: target appears, combined tries to match it
+  { dur: 10000 },  // Ch2: "you" are one wave — hand appears, controls it, combined responds
+  { dur: 12000 },  // Ch3: two-hand gesture detail
 ];
 
 function enterIntro() {
@@ -477,124 +478,13 @@ function drawTutorialFrame(chapter, elapsed) {
 
   if (chapter === 0) drawChapter0(ctx, w, h, elapsed);
   else if (chapter === 1) drawChapter1(ctx, w, h, elapsed);
-  else drawChapter2(ctx, w, h, elapsed);
+  else if (chapter === 2) drawChapter2(ctx, w, h, elapsed);
+  else drawChapter3(ctx, w, h, elapsed);
 }
 
-// --- Chapter 0: one wave alone, fading in, lonely ---
-function drawChapter0(ctx, w, h, t) {
-  const cy = h / 2;
-  const amp = h * 0.14;
-  const T = TUTORIAL_CHAPTERS[0].dur;
-  const fadeIn  = Math.min(1, t / 1200);
-  const fadeOut = Math.max(0, 1 - (t - (T - 800)) / 800);
-  const alpha = fadeIn * fadeOut;
-
-  ctx.strokeStyle = `rgba(232,124,124,${alpha * 0.9})`;
-  ctx.shadowColor = `rgba(232,124,124,${alpha * 0.6})`;
-  ctx.shadowBlur = 10;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  for (let i = 0; i <= 200; i++) {
-    const px = (i/200) * w;
-    const x  = (i/200) * Math.PI * 4;
-    const y  = cy - amp * Math.sin(1.5 * x + t * 0.002);
-    if (i === 0) ctx.moveTo(px,y); else ctx.lineTo(px,y);
-  }
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-}
-
-// --- Chapter 1: A and B change, C (their sum) responds — the core mechanic ---
-function drawChapter1(ctx, w, h, t) {
-  const T = TUTORIAL_CHAPTERS[1].dur;
-
-  // Layout: upper third = wave A (coral), middle third = wave C = A+B (teal),
-  //         lower third = wave B (blue)
-  const yA = h * 0.22;
-  const yC = h * 0.55;
-  const yB = h * 0.82;
-  const smallAmp = h * 0.08;
-  const bigAmp   = h * 0.14;
-
-  // ---- animated parameters: we script a sequence of changes ----
-  // Timeline within this chapter (in ms):
-  //  0    - 2000 : fade in A alone (top), B = 0
-  //  2000 - 4000 : fade in B (bottom), C now shows nonzero sum
-  //  4000 - 7000 : A's FREQUENCY slowly increases — C changes shape visibly
-  //  7000 - 9500 : A's AMPLITUDE slowly decreases then increases — C wiggles
-  //  9500 - 12000: B's FREQUENCY slowly decreases — C changes shape differently
-  // 12000 - end  : gentle fade while holding final state
-  let aFreq, aAmp, aPhase, bFreq, bAmp, bPhase;
-  let alphaA = 0, alphaB = 0, alphaC = 0;
-
-  // base values
-  aFreq = 1.2; aAmp = 0.7; aPhase = 0;
-  bFreq = 2.2; bAmp = 0.7; bPhase = Math.PI * 0.5;
-
-  const ease = (p) => p < 0.5 ? 2*p*p : 1 - Math.pow(-2*p+2, 2)/2;
-
-  if (t < 2000) {
-    alphaA = Math.min(1, t / 600);
-    alphaB = 0;
-    alphaC = 0; // C does not exist until B exists
-  } else if (t < 4000) {
-    alphaA = 1;
-    alphaB = Math.min(1, (t - 2000) / 600);
-    alphaC = alphaB; // C emerges in sync with B
-  } else if (t < 7000) {
-    const p = ease((t - 4000) / 3000);
-    aFreq = 1.2 + p * 2.0;    // 1.2 → 3.2 (noticeable change)
-    alphaA = 1; alphaB = 1; alphaC = 1;
-  } else if (t < 9500) {
-    const p = (t - 7000) / 2500;
-    aFreq = 3.2;
-    aAmp = 0.7 * (1 - Math.abs(Math.sin(p * Math.PI))); // 0.7 → 0 → 0.7
-    alphaA = 1; alphaB = 1; alphaC = 1;
-  } else if (t < 12000) {
-    const p = ease((t - 9500) / 2500);
-    aFreq = 3.2; aAmp = 0.7;
-    bFreq = 2.2 - p * 1.2;   // 2.2 → 1.0
-    alphaA = 1; alphaB = 1; alphaC = 1;
-  } else {
-    aFreq = 3.2; aAmp = 0.7;
-    bFreq = 1.0;
-    alphaA = 1; alphaB = 1; alphaC = 1;
-    const fade = Math.max(0, 1 - (t - (T - 600)) / 600);
-    alphaA *= fade; alphaB *= fade; alphaC *= fade;
-  }
-
-  // wave A at yA
-  drawWaveLine(ctx, w, yA, smallAmp, alphaA, 232, 124, 124, 2,
-    (x) => aAmp * Math.sin(aFreq * x + aPhase + t * 0.0015));
-
-  // wave B at yB
-  drawWaveLine(ctx, w, yB, smallAmp, alphaB, 124, 180, 232, 2,
-    (x) => bAmp * Math.sin(bFreq * x + bPhase + t * 0.0015));
-
-  // wave C (sum) at yC — bigger and bright
-  drawWaveLine(ctx, w, yC, bigAmp, alphaC, 124, 245, 196, 2.5,
-    (x) =>
-      aAmp * Math.sin(aFreq * x + aPhase + t * 0.0015) +
-      bAmp * Math.sin(bFreq * x + bPhase + t * 0.0015));
-
-  // horizontal separators (very faint)
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.beginPath(); ctx.moveTo(0, (yA + yC) / 2); ctx.lineTo(w, (yA + yC) / 2); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(0, (yC + yB) / 2); ctx.lineTo(w, (yC + yB) / 2); ctx.stroke();
-
-  // labels: just "A", "B", "C" letters on the left — no words
-  const alphaText = Math.min(alphaA, alphaC, alphaB) * 0.55;
-  if (alphaText > 0) {
-    ctx.font = 'italic 22px "Cormorant Garamond", serif';
-    ctx.textAlign = 'left';
-    ctx.fillStyle = `rgba(232,124,124,${alphaA * 0.6})`;
-    ctx.fillText('A', 14, yA + 6);
-    ctx.fillStyle = `rgba(124,180,232,${alphaB * 0.6})`;
-    ctx.fillText('B', 14, yB + 6);
-    ctx.fillStyle = `rgba(124,245,196,${alphaC * 0.7})`;
-    ctx.fillText('A + B', 14, yC + 6);
-  }
-}
+// ============================================================
+// TUTORIAL CHAPTER DRAWING FUNCTIONS
+// ============================================================
 
 function drawWaveLine(ctx, w, yCenter, amp, alpha, r, g, b, lineW, fn) {
   if (alpha <= 0) return;
@@ -613,163 +503,7 @@ function drawWaveLine(ctx, w, yCenter, amp, alpha, r, g, b, lineW, fn) {
   ctx.shadowBlur = 0;
 }
 
-// --- Chapter 2: hand gesture demo — TWO hands, big, slow, obvious ---
-function drawChapter2(ctx, w, h, t) {
-  const T = TUTORIAL_CHAPTERS[2].dur;
-
-  // Layout: left panel is divided into left-hand area + right-hand area.
-  // Right panel shows the resulting wave.
-  const panelX = w * 0.08;
-  const panelW = w * 0.46;
-  const panelY = h * 0.12;
-  const panelH = h * 0.76;
-  const leftHandBoxX  = panelX + panelW * 0.02;
-  const leftHandBoxW  = panelW * 0.32;
-  const rightHandBoxX = panelX + panelW * 0.38;
-  const rightHandBoxW = panelW * 0.60;
-
-  // Timeline (total 14s):
-  //   0    -   600 : fade in (both hands at neutral)
-  //   600  -  5100 : RIGHT hand sweeps horizontally (freq)
-  //  5100 -  5600 : pause
-  //  5600 - 10100 : RIGHT hand sweeps vertically (amp)
-  // 10100 - 10600 : pause
-  // 10600 - T-400 : LEFT hand sweeps vertically (phase)
-  // T-400 - T     : fade out
-
-  let rightX = 0.5, rightY = 0.5;  // 0..1 within right-hand box
-  let leftY  = 0.5;                 // 0..1 within left-hand box
-  let hlRightH = 0, hlRightV = 0, hlLeftV = 0;
-
-  const fadeIn  = Math.min(1, t / 600);
-  const fadeOut = Math.max(0, 1 - Math.max(0, t - (T - 400)) / 400);
-  const globalAlpha = fadeIn * fadeOut;
-
-  if (t < 600) {
-    // neutral pose
-  } else if (t < 5100) {
-    const p = (t - 600) / 4500;
-    rightX = 0.5 - 0.4 * Math.sin(p * Math.PI * 2); // 0.5 → 0.1 → 0.5 → 0.9 → 0.5
-    rightY = 0.5;
-    leftY  = 0.5;
-    hlRightH = Math.sin(p * Math.PI);
-  } else if (t < 5600) {
-    rightX = 0.5; rightY = 0.5; leftY = 0.5; // pause
-  } else if (t < 10100) {
-    const p = (t - 5600) / 4500;
-    rightX = 0.5;
-    rightY = 0.5 - 0.4 * Math.sin(p * Math.PI * 2);
-    leftY  = 0.5;
-    hlRightV = Math.sin(p * Math.PI);
-  } else if (t < 10600) {
-    rightX = 0.5; rightY = 0.5; leftY = 0.5;
-  } else {
-    const p = (t - 10600) / (T - 11000);
-    rightX = 0.5; rightY = 0.5;
-    leftY  = 0.5 - 0.4 * Math.sin(p * Math.PI * 2);
-    hlLeftV = Math.sin(Math.min(1, p) * Math.PI);
-  }
-
-  // compute demo wave params from poses
-  const freqDemo  = 0.8 + rightX * 3.5;
-  const ampDemo   = 0.2 + (1 - rightY) * 0.8;
-  const phaseDemo = leftY * Math.PI * 2;
-
-  ctx.globalAlpha = globalAlpha;
-
-  // ---- outer panel frame ----
-  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-  ctx.strokeRect(panelX, panelY, panelW, panelH);
-  // divider between the two hand sub-boxes
-  ctx.strokeStyle = 'rgba(255,255,255,0.04)';
-  ctx.setLineDash([3, 4]);
-  ctx.beginPath();
-  const dividerX = panelX + panelW * 0.36;
-  ctx.moveTo(dividerX, panelY + 8);
-  ctx.lineTo(dividerX, panelY + panelH - 8);
-  ctx.stroke();
-  ctx.setLineDash([]);
-
-  // ---- left-hand position (inside leftHandBox) ----
-  const leftHandCx = leftHandBoxX + leftHandBoxW * 0.5;
-  const leftHandCy = panelY + panelH * (0.12 + leftY * 0.76);
-
-  // ---- right-hand position (inside rightHandBox) ----
-  const rightHandCx = rightHandBoxX + rightHandBoxW * (0.12 + rightX * 0.76);
-  const rightHandCy = panelY + panelH * (0.12 + rightY * 0.76);
-
-  // Highlights: axis guide lines while the relevant hand is moving
-  if (hlRightH > 0.05) {
-    ctx.strokeStyle = `rgba(124,245,196,${0.15 + 0.3 * hlRightH})`;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(rightHandBoxX + 4, rightHandCy);
-    ctx.lineTo(rightHandBoxX + rightHandBoxW - 4, rightHandCy);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  if (hlRightV > 0.05) {
-    ctx.strokeStyle = `rgba(124,245,196,${0.15 + 0.3 * hlRightV})`;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(rightHandCx, panelY + 4);
-    ctx.lineTo(rightHandCx, panelY + panelH - 4);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-  if (hlLeftV > 0.05) {
-    ctx.strokeStyle = `rgba(245,193,108,${0.15 + 0.3 * hlLeftV})`;
-    ctx.setLineDash([4, 4]);
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(leftHandCx, panelY + 4);
-    ctx.lineTo(leftHandCx, panelY + panelH - 4);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  }
-
-  // Draw left hand (amber — matches phase color channel)
-  drawHand(ctx, leftHandCx, leftHandCy, 1, '#f5c16c');
-  // Draw right hand (teal — matches freq/amp channel)
-  drawHand(ctx, rightHandCx, rightHandCy, 1, '#7cf5c4');
-
-  // ---- right panel: resulting wave ----
-  const waveX = w * 0.58;
-  const waveW = w * 0.36;
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(waveX, panelY, waveW, panelH);
-  ctx.clip();
-
-  ctx.strokeStyle = `rgba(124,245,196,${0.9 * globalAlpha})`;
-  ctx.shadowColor = `rgba(124,245,196,${0.7 * globalAlpha})`;
-  ctx.shadowBlur = 14;
-  ctx.lineWidth = 2.5;
-  ctx.beginPath();
-  const waveAmp = h * 0.22;
-  const cy = h / 2;
-  for (let i = 0; i <= 220; i++) {
-    const px = waveX + (i/220) * waveW;
-    const x  = (i/220) * Math.PI * 4;
-    const y  = cy - ampDemo * waveAmp * Math.sin(freqDemo * x + phaseDemo + t * 0.002);
-    if (i === 0) ctx.moveTo(px,y); else ctx.lineTo(px,y);
-  }
-  ctx.stroke();
-  ctx.shadowBlur = 0;
-  ctx.restore();
-
-  // faint frame for wave panel
-  ctx.strokeStyle = `rgba(255,255,255,${0.05 * globalAlpha})`;
-  ctx.strokeRect(waveX, panelY, waveW, panelH);
-
-  ctx.globalAlpha = 1;
-}
-
 function drawHand(ctx, cx, cy, openness, color) {
-  // openness: 0 = fist, 1 = open palm
-  // Realistic-looking hand: oval palm + 4 fingers of varying lengths + thumb offset to side.
   ctx.save();
   ctx.fillStyle = color;
   ctx.strokeStyle = color;
@@ -778,14 +512,8 @@ function drawHand(ctx, cx, cy, openness, color) {
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   ctx.globalAlpha *= 0.92;
-
-  // ---- PALM: rounded rectangle/oval, taller than wide ----
-  const palmW = 34;
-  const palmH = 42;
-  const palmTop = cy - 4;        // top edge of palm (where fingers come out)
-  const palmBottom = cy + palmH - 4;
-  // use roundRect-style path (manually, so it works everywhere)
-  const r = 14;
+  const palmW = 34, palmH = 42, r = 14;
+  const palmTop = cy - 4, palmBottom = cy + palmH - 4;
   ctx.beginPath();
   ctx.moveTo(cx - palmW/2 + r, palmTop);
   ctx.lineTo(cx + palmW/2 - r, palmTop);
@@ -798,56 +526,194 @@ function drawHand(ctx, cx, cy, openness, color) {
   ctx.quadraticCurveTo(cx - palmW/2, palmTop, cx - palmW/2 + r, palmTop);
   ctx.closePath();
   ctx.fill();
-
-  // ---- 4 FINGERS (index, middle, ring, pinky) — different lengths ----
-  // thickness tapers slightly, lengths follow hand proportions:
-  // middle longest, then index ≈ ring, pinky shortest
-  const fingerBaseY = palmTop + 2;
-  const fingerThickness = 8;
-  ctx.lineWidth = fingerThickness;
-
-  // fist: fingers curl back, so length is short and they appear inside palm
-  // open: fingers extend upward to full length
-  const fingers = [
-    { xOff: -11, maxLen: 32 },   // index
-    { xOff:  -4, maxLen: 38 },   // middle (longest)
-    { xOff:   4, maxLen: 34 },   // ring
-    { xOff:  11, maxLen: 26 },   // pinky
-  ];
-  fingers.forEach(f => {
-    const len = 6 + openness * (f.maxLen - 6);
-    const x0 = cx + f.xOff;
-    const y0 = fingerBaseY;
-    const y1 = fingerBaseY - len;
-    ctx.beginPath();
-    ctx.moveTo(x0, y0);
-    ctx.lineTo(x0, y1);
-    ctx.stroke();
-    // fingertip cap
-    ctx.beginPath();
-    ctx.arc(x0, y1, fingerThickness / 2, 0, Math.PI * 2);
-    ctx.fill();
+  const ft = 8;
+  ctx.lineWidth = ft;
+  [{xOff:-11,ml:32},{xOff:-4,ml:38},{xOff:4,ml:34},{xOff:11,ml:26}].forEach(f => {
+    const len = 6 + openness * (f.ml - 6);
+    ctx.beginPath(); ctx.moveTo(cx+f.xOff, palmTop+2); ctx.lineTo(cx+f.xOff, palmTop+2-len); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx+f.xOff, palmTop+2-len, ft/2, 0, Math.PI*2); ctx.fill();
   });
-
-  // ---- THUMB — offset to the left side, shorter, angled ----
-  const thumbLen = 8 + openness * 18;
-  const thumbAngle = -Math.PI * 0.7 + (1 - openness) * 0.4; // slightly curls in on fist
-  const thumbBaseX = cx - palmW/2 + 4;
-  const thumbBaseY = palmTop + 14;
-  const thumbTipX = thumbBaseX + Math.cos(thumbAngle) * thumbLen;
-  const thumbTipY = thumbBaseY + Math.sin(thumbAngle) * thumbLen;
+  const tl = 8 + openness * 18;
+  const ta = -Math.PI*0.7 + (1-openness)*0.4;
+  const tbx = cx-palmW/2+4, tby = palmTop+14;
   ctx.lineWidth = 9;
-  ctx.beginPath();
-  ctx.moveTo(thumbBaseX, thumbBaseY);
-  ctx.lineTo(thumbTipX, thumbTipY);
-  ctx.stroke();
-  ctx.beginPath();
-  ctx.arc(thumbTipX, thumbTipY, 4.5, 0, Math.PI * 2);
-  ctx.fill();
-
+  ctx.beginPath(); ctx.moveTo(tbx,tby); ctx.lineTo(tbx+Math.cos(ta)*tl, tby+Math.sin(ta)*tl); ctx.stroke();
+  ctx.beginPath(); ctx.arc(tbx+Math.cos(ta)*tl, tby+Math.sin(ta)*tl, 4.5, 0, Math.PI*2); ctx.fill();
   ctx.restore();
 }
 
+// ---- CH 0: A + B = combined wave (core concept) ----
+function drawChapter0(ctx, w, h, t) {
+  const T = TUTORIAL_CHAPTERS[0].dur;
+  const yA = h*0.22, yC = h*0.55, yB = h*0.82;
+  const sA = h*0.08, bA = h*0.14;
+  const ease = p => p<0.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
+  let aF=1.2, aA=0.7, aP=0, bF=2.2, bA2=0.7, bP=Math.PI*0.5;
+  let alA=0, alB=0, alC=0;
+
+  if (t<1500) { alA=Math.min(1,t/600); }
+  else if (t<3000) { alA=1; alB=Math.min(1,(t-1500)/600); alC=alB; }
+  else if (t<6000) { const p=ease((t-3000)/3000); aF=1.2+p*2; alA=1;alB=1;alC=1; }
+  else if (t<8500) { const p=(t-6000)/2500; aF=3.2; aA=0.7*(1-Math.abs(Math.sin(p*Math.PI))); alA=1;alB=1;alC=1; }
+  else if (t<11000) { const p=ease((t-8500)/2500); aF=3.2;aA=0.7; bF=2.2-p*1.2; alA=1;alB=1;alC=1; }
+  else { aF=3.2;aA=0.7;bF=1; const f=Math.max(0,1-(t-(T-600))/600); alA=f;alB=f;alC=f; }
+
+  drawWaveLine(ctx,w,yA,sA,alA,232,124,124,2, x=>aA*Math.sin(aF*x+aP+t*0.0015));
+  drawWaveLine(ctx,w,yB,sA,alB,124,180,232,2, x=>bA2*Math.sin(bF*x+bP+t*0.0015));
+  drawWaveLine(ctx,w,yC,bA,alC,124,245,196,2.5, x=>aA*Math.sin(aF*x+aP+t*0.0015)+bA2*Math.sin(bF*x+bP+t*0.0015));
+
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.beginPath();ctx.moveTo(0,(yA+yC)/2);ctx.lineTo(w,(yA+yC)/2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(0,(yC+yB)/2);ctx.lineTo(w,(yC+yB)/2);ctx.stroke();
+
+  if (Math.min(alA,alB)>0) {
+    ctx.font='italic 22px "Cormorant Garamond",serif';ctx.textAlign='left';
+    ctx.fillStyle=`rgba(232,124,124,${alA*0.6})`;ctx.fillText('A',14,yA+6);
+    ctx.fillStyle=`rgba(124,180,232,${alB*0.6})`;ctx.fillText('B',14,yB+6);
+    ctx.fillStyle=`rgba(124,245,196,${alC*0.7})`;ctx.fillText('A + B',14,yC+6);
+  }
+}
+
+// ---- CH 1: target appears, combined morphs to match ----
+function drawChapter1(ctx, w, h, t) {
+  const T = TUTORIAL_CHAPTERS[1].dur;
+  const yT = h*0.35, yC = h*0.65, amp = h*0.12;
+  const tFA=1.8, tAA=0.6, tPA=0, tFB=2.8, tAB=0.5, tPB=1.2;
+  const targetFn = x => tAA*Math.sin(tFA*x+tPA) + tAB*Math.sin(tFB*x+tPB);
+
+  let cFA, cAA, cFB, cAB, alT=0, alC=0, glow=0;
+  if (t<1500) { alT=Math.min(1,t/800); cFA=1;cAA=0.4;cFB=1.5;cAB=0.3; }
+  else if (t<3000) { alT=1; alC=Math.min(1,(t-1500)/800); cFA=1;cAA=0.4;cFB=1.5;cAB=0.3; }
+  else if (t<8000) {
+    const p=(t-3000)/5000; const ep=p<0.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+    alT=1;alC=1;
+    cFA=1+ep*(tFA-1); cAA=0.4+ep*(tAA-0.4);
+    cFB=1.5+ep*(tFB-1.5); cAB=0.3+ep*(tAB-0.3);
+    glow=ep*0.8;
+  } else {
+    alT=1;alC=1;cFA=tFA;cAA=tAA;cFB=tFB;cAB=tAB;glow=0.8;
+    const f=Math.max(0,1-(t-(T-600))/600); alT*=f;alC*=f;glow*=f;
+  }
+  const combinedFn = x => cAA*Math.sin(cFA*x) + cAB*Math.sin(cFB*x+1.2);
+
+  if (alT>0) {
+    ctx.setLineDash([5,5]);
+    drawWaveLine(ctx,w,yT,amp,alT*0.7,245,193,108,1.5,targetFn);
+    drawWaveLine(ctx,w,yC,amp,alT*0.25,245,193,108,1,targetFn);
+    ctx.setLineDash([]);
+  }
+  if (alC>0) {
+    ctx.shadowBlur=10+glow*16;
+    drawWaveLine(ctx,w,yC,amp,alC,124,245,196,2+glow*1.5,combinedFn);
+    ctx.shadowBlur=0;
+  }
+  if (alT>0.3) {
+    ctx.font='italic 16px "Cormorant Garamond",serif';ctx.textAlign='left';
+    ctx.fillStyle=`rgba(245,193,108,${alT*0.6})`;ctx.fillText('target',14,yT-amp-8);
+    ctx.fillStyle=`rgba(124,245,196,${alC*0.6})`;ctx.fillText('A + B',14,yC-amp-8);
+  }
+  if (glow>0.6) {
+    ctx.font='italic 28px "Cormorant Garamond",serif';ctx.textAlign='center';
+    ctx.fillStyle=`rgba(124,245,196,${(glow-0.6)*2.5})`;ctx.fillText('✓',w/2,h*0.15);
+  }
+}
+
+// ---- CH 2: "you" control one wave — hand appears, combined responds ----
+function drawChapter2(ctx, w, h, t) {
+  const T = TUTORIAL_CHAPTERS[2].dur;
+  const alphaAll = Math.min(1,t/600) * Math.max(0,1-Math.max(0,t-(T-500))/500);
+  const handAreaW = w*0.32, waveAreaX = w*0.38, waveAreaW = w*0.58;
+
+  const handP = (t/4000)%1;
+  const handY = 0.3 + 0.4*Math.sin(handP*Math.PI*2);
+  const myFreq = 1+handY*2.5, myAmp = 0.3+(1-handY)*0.5;
+  const peerFreq=2, peerAmp=0.5, peerPhase=1;
+  const amp = h*0.12;
+  const yMy = h*0.3, yComb = h*0.7;
+
+  ctx.globalAlpha = alphaAll;
+
+  // hand
+  const hcx = handAreaW*0.5, hcy = h*(0.2+handY*0.6);
+  drawHand(ctx, hcx, hcy, 1, '#e87c7c');
+
+  // connection line
+  ctx.strokeStyle='rgba(232,124,124,0.25)';ctx.setLineDash([3,5]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(hcx+30,hcy);ctx.lineTo(waveAreaX,yMy);ctx.stroke();
+  ctx.setLineDash([]);
+
+  // "you" label
+  ctx.font='italic 22px "Cormorant Garamond",serif';ctx.textAlign='center';
+  ctx.fillStyle='rgba(232,124,124,0.85)';ctx.fillText('you',hcx,h*0.08);
+
+  // waves in clipped area
+  ctx.save();ctx.translate(waveAreaX,0);
+  ctx.beginPath();ctx.rect(0,0,waveAreaW,h);ctx.clip();
+
+  drawWaveLine(ctx,waveAreaW,yMy,amp,0.9,232,124,124,2.5, x=>myAmp*Math.sin(myFreq*x+t*0.002));
+  drawWaveLine(ctx,waveAreaW,yMy,amp,0.3,124,180,232,1.2, x=>peerAmp*Math.sin(peerFreq*x+peerPhase));
+  drawWaveLine(ctx,waveAreaW,yComb,amp*1.3,1,124,245,196,2.5,
+    x=>myAmp*Math.sin(myFreq*x+t*0.002)+peerAmp*Math.sin(peerFreq*x+peerPhase));
+
+  ctx.font='italic 14px "Cormorant Garamond",serif';ctx.textAlign='left';
+  ctx.fillStyle='rgba(232,124,124,0.7)';ctx.fillText('your wave',8,yMy-amp-10);
+  ctx.fillStyle='rgba(124,245,196,0.7)';ctx.fillText('combined',8,yComb-amp*1.3-10);
+
+  ctx.restore();
+
+  ctx.strokeStyle='rgba(255,255,255,0.04)';
+  ctx.beginPath();ctx.moveTo(waveAreaX,h/2);ctx.lineTo(w,h/2);ctx.stroke();
+  ctx.globalAlpha=1;
+}
+
+// ---- CH 3: two-hand gesture detail (right=freq/amp, left=phase) ----
+function drawChapter3(ctx, w, h, t) {
+  const T = TUTORIAL_CHAPTERS[3].dur;
+  const pX=w*0.08, pW=w*0.46, pY=h*0.12, pH=h*0.76;
+  const lhW=pW*0.32, rhX=pX+pW*0.38, rhW=pW*0.60;
+  let rX=0.5,rY=0.5,lY=0.5,hlRH=0,hlRV=0,hlLV=0;
+  const fi=Math.min(1,t/600), fo=Math.max(0,1-Math.max(0,t-(T-400))/400);
+  const ga=fi*fo;
+
+  if (t<600){}
+  else if(t<4600){const p=(t-600)/4000;rX=0.5-0.4*Math.sin(p*Math.PI*2);hlRH=Math.sin(p*Math.PI);}
+  else if(t<5100){rX=0.5;}
+  else if(t<9100){const p=(t-5100)/4000;rY=0.5-0.4*Math.sin(p*Math.PI*2);hlRV=Math.sin(p*Math.PI);}
+  else if(t<9600){rY=0.5;}
+  else{const p=(t-9600)/(T-10000);lY=0.5-0.4*Math.sin(p*Math.PI*2);hlLV=Math.sin(Math.min(1,p)*Math.PI);}
+
+  const fD=0.8+rX*3.5, aD=0.2+(1-rY)*0.8, phD=lY*Math.PI*2;
+  ctx.globalAlpha=ga;
+
+  ctx.strokeStyle='rgba(255,255,255,0.05)';ctx.strokeRect(pX,pY,pW,pH);
+  ctx.setLineDash([3,4]);const dX=pX+pW*0.36;
+  ctx.beginPath();ctx.moveTo(dX,pY+8);ctx.lineTo(dX,pY+pH-8);ctx.stroke();ctx.setLineDash([]);
+
+  const lhCx=pX+lhW*0.5, lhCy=pY+pH*(0.12+lY*0.76);
+  const rhCx=rhX+rhW*(0.12+rX*0.76), rhCy=pY+pH*(0.12+rY*0.76);
+
+  if(hlRH>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRH})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhX+4,rhCy);ctx.lineTo(rhX+rhW-4,rhCy);ctx.stroke();ctx.setLineDash([]);}
+  if(hlRV>0.05){ctx.strokeStyle=`rgba(124,245,196,${0.15+0.3*hlRV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(rhCx,pY+4);ctx.lineTo(rhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
+  if(hlLV>0.05){ctx.strokeStyle=`rgba(245,193,108,${0.15+0.3*hlLV})`;ctx.setLineDash([4,4]);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(lhCx,pY+4);ctx.lineTo(lhCx,pY+pH-4);ctx.stroke();ctx.setLineDash([]);}
+
+  drawHand(ctx,lhCx,lhCy,1,'#f5c16c');
+  drawHand(ctx,rhCx,rhCy,1,'#7cf5c4');
+
+  const wX=w*0.58,wW=w*0.36;
+  ctx.save();ctx.beginPath();ctx.rect(wX,pY,wW,pH);ctx.clip();
+  ctx.strokeStyle=`rgba(124,245,196,${0.9*ga})`;ctx.shadowColor=`rgba(124,245,196,${0.7*ga})`;
+  ctx.shadowBlur=14;ctx.lineWidth=2.5;ctx.beginPath();
+  const wA=h*0.22,cy=h/2;
+  for(let i=0;i<=220;i++){const px=wX+(i/220)*wW;const x=(i/220)*Math.PI*4;const y=cy-aD*wA*Math.sin(fD*x+phD+t*0.002);if(i===0)ctx.moveTo(px,y);else ctx.lineTo(px,y);}
+  ctx.stroke();ctx.shadowBlur=0;ctx.restore();
+
+  ctx.strokeStyle=`rgba(255,255,255,${0.05*ga})`;ctx.strokeRect(wX,pY,wW,pH);
+  ctx.globalAlpha=1;
+}
+
+
+// ============================================================
+// LOGIN — Firebase Auth
 // ============================================================
 // LOGIN — Firebase Auth
 // ============================================================
@@ -1117,24 +983,24 @@ function startPlay(isInitiator) {
   document.getElementById('role-badge').textContent = state.role;
   document.getElementById('role-name').textContent = state.name;
 
-  // Update briefing with role info and color
-  document.getElementById('briefing-role-letter').textContent = state.role;
-  // Set "your wave" swatch color based on role
-  const yourSwatches = document.querySelectorAll('.sw-yours');
-  const yourColor = state.role === 'A' ? 'var(--wave-a)' : 'var(--wave-b)';
-  yourSwatches.forEach(s => {
-    s.style.background = yourColor;
-    s.style.boxShadow = `0 0 4px ${yourColor}`;
-  });
+  // Update briefing swatch color based on role
+  const briefingSwatch = document.getElementById('briefing-swatch');
+  if (state.role === 'A') {
+    briefingSwatch.style.background = 'var(--wave-a)';
+    briefingSwatch.style.boxShadow = '0 0 6px var(--wave-a)';
+  } else {
+    briefingSwatch.style.background = 'var(--wave-b)';
+    briefingSwatch.style.boxShadow = '0 0 6px var(--wave-b)';
+  }
 
   showScreen('play');
   resizeWaveCanvas();
 
-  // Show briefing overlay first
+  // Show briefing overlay — 3 seconds
   const overlay = document.getElementById('briefing-overlay');
   const countdownEl = document.getElementById('briefing-countdown');
   overlay.classList.remove('hidden');
-  let briefingTime = 4;
+  let briefingTime = 3;
   countdownEl.textContent = briefingTime;
 
   const briefingInterval = setInterval(() => {
@@ -1142,7 +1008,6 @@ function startPlay(isInitiator) {
     if (briefingTime <= 0) {
       clearInterval(briefingInterval);
       overlay.classList.add('hidden');
-      // NOW start the actual game
       beginGameplay();
     } else {
       countdownEl.textContent = briefingTime;
