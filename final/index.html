@@ -85,12 +85,8 @@
 
     <!-- Tutorial: three chapters, canvas-driven, pure visual -->
     <div class="tutorial" id="tutorial">
+      <div class="tutorial-label">tutorial — just watch</div>
       <canvas id="tutorial-canvas"></canvas>
-      <div class="tutorial-dots" id="tutorial-dots">
-        <span class="dot active"></span>
-        <span class="dot"></span>
-        <span class="dot"></span>
-      </div>
       <button class="tutorial-skip" id="tutorial-skip">skip &rarr;</button>
     </div>
 
@@ -132,6 +128,32 @@
 
 <!-- ============ SCREEN 3: PLAY ============ -->
 <section class="screen" id="screen-play" hidden>
+
+  <!-- BRIEFING OVERLAY — shown for a few seconds before countdown starts -->
+  <div class="briefing-overlay" id="briefing-overlay">
+    <div class="briefing-card">
+      <div class="briefing-title">get ready</div>
+      <div class="briefing-waves">
+        <div class="briefing-row">
+          <span class="swatch sw-yours"></span>
+          <span class="briefing-text">this is <strong>your wave</strong> — move your hands to shape it</span>
+        </div>
+        <div class="briefing-row">
+          <span class="swatch sw-combined"></span>
+          <span class="briefing-text">this is <strong>you + them</strong> combined</span>
+        </div>
+        <div class="briefing-row">
+          <span class="swatch sw-target"></span>
+          <span class="briefing-text">this is the <strong>target</strong> — match it together</span>
+        </div>
+      </div>
+      <div class="briefing-role">
+        you are wave <strong id="briefing-role-letter">A</strong>
+      </div>
+      <div class="briefing-countdown" id="briefing-countdown">4</div>
+    </div>
+  </div>
+
   <!-- Top bar -->
   <header class="play-header">
     <div class="play-header-left">
@@ -154,15 +176,16 @@
 
     <!-- Legend overlay -->
     <div class="legend">
-      <div class="legend-item"><span class="swatch sw-target"></span>target</div>
+      <div class="legend-item"><span class="swatch sw-yours"></span>your wave</div>
       <div class="legend-item"><span class="swatch sw-combined"></span>you + them</div>
+      <div class="legend-item"><span class="swatch sw-target"></span>target</div>
     </div>
 
     <!-- Video preview (bottom right) -->
     <div class="video-box">
       <video id="video" playsinline muted></video>
       <canvas id="hand-canvas"></canvas>
-      <div class="video-label">your hand</div>
+      <div class="video-label">your hands</div>
     </div>
 
     <!-- Parameter readout -->
