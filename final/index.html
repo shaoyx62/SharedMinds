@@ -133,10 +133,16 @@
   <div class="briefing-overlay" id="briefing-overlay">
     <div class="briefing-card">
       <div class="briefing-line">
-        <span>you are the</span>
-        <span class="swatch briefing-swatch" id="briefing-swatch"></span>
-        <span>wave — match the</span>
-        <span class="swatch sw-target"></span>
+        <span>you are</span>
+        <svg class="briefing-wave-svg" id="briefing-wave-icon" viewBox="0 0 60 20" width="60" height="20">
+          <path d="M0,10 Q7.5,0 15,10 Q22.5,20 30,10 Q37.5,0 45,10 Q52.5,20 60,10" fill="none" stroke-width="2.5"/>
+        </svg>
+      </div>
+      <div class="briefing-line sub">
+        <span>match</span>
+        <svg class="briefing-target-svg" viewBox="0 0 60 20" width="60" height="20">
+          <path d="M0,10 Q7.5,2 15,10 Q22.5,18 30,10 Q37.5,2 45,10 Q52.5,18 60,10" fill="none" stroke="rgba(245,193,108,0.8)" stroke-width="2" stroke-dasharray="4,3"/>
+        </svg>
       </div>
       <div class="briefing-countdown" id="briefing-countdown">3</div>
     </div>
@@ -165,7 +171,6 @@
     <!-- Legend overlay -->
     <div class="legend">
       <div class="legend-item"><span class="swatch sw-yours"></span>your wave</div>
-      <div class="legend-item"><span class="swatch sw-combined"></span>you + them</div>
       <div class="legend-item"><span class="swatch sw-target"></span>target</div>
     </div>
 
