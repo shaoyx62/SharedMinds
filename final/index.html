@@ -16,6 +16,9 @@
 </head>
 <body>
 
+<!-- Global logout — fixed top-right, visible after login -->
+<button class="global-logout" id="global-logout" hidden>logout</button>
+
 <!-- ============ SCREEN 1: LOGIN ============ -->
 <section class="screen" id="screen-login">
   <div class="login-wrap">
@@ -134,7 +137,6 @@
     <div class="play-header-left">
       <span class="role-badge" id="role-badge">A</span>
       <span class="role-name" id="role-name">anonymous</span>
-      <button class="logout-btn" id="logout-btn">logout</button>
     </div>
     <div class="play-header-center">
       <span class="match-label">match</span>
@@ -212,12 +214,39 @@
       <button class="tab" data-tier="INTERFERENCE">interference</button>
       <button class="tab" data-tier="OUT_OF_PHASE">out of phase</button>
     </nav>
+    <div class="view-tabs">
+      <button class="view-tab active" id="tab-gallery-from-gallery">gallery</button>
+      <button class="view-tab" id="tab-map-from-gallery">map</button>
+    </div>
     <div class="gallery-action">
       <button class="ghost-btn" id="back-to-play-btn">meet someone new</button>
-      <button class="logout-btn" id="logout-btn-gallery">logout</button>
     </div>
   </header>
   <div class="gallery-grid" id="gallery-grid"></div>
+</section>
+
+<!-- ============ SCREEN 6: MAP ============ -->
+<section class="screen" id="screen-map" hidden>
+  <header class="map-header">
+    <h2>MAP</h2>
+    <p>every connection, visualized</p>
+    <div class="view-tabs">
+      <button class="view-tab" id="tab-gallery">gallery</button>
+      <button class="view-tab active" id="tab-map">map</button>
+    </div>
+    <div class="gallery-action">
+      <button class="ghost-btn" id="map-back-btn">meet someone new</button>
+    </div>
+  </header>
+  <div class="map-container">
+    <canvas id="map-canvas"></canvas>
+    <div class="map-tooltip" id="map-tooltip" hidden></div>
+  </div>
+  <div class="map-legend">
+    <span class="map-legend-item"><span class="map-dot dot-you"></span> you</span>
+    <span class="map-legend-item"><span class="map-dot dot-other"></span> others</span>
+    <span class="map-legend-item">closer = higher match</span>
+  </div>
 </section>
 
 <script src="script.js"></script>
