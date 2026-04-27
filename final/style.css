@@ -79,7 +79,7 @@ input  { font-family: inherit; }
 
 /* ============ LOGIN SCREEN ============ */
 .login-wrap {
-  max-width: 680px;
+  max-width: 600px;
   text-align: center;
   position: relative;
 }
