@@ -318,6 +318,7 @@ const screens = {
   play:    document.getElementById('screen-play'),
   result:  document.getElementById('screen-result'),
   gallery: document.getElementById('screen-gallery'),
+  map:     document.getElementById('screen-map'),
 };
 
 function showScreen(name) {
@@ -326,6 +327,9 @@ function showScreen(name) {
   if (name === 'gallery') renderGallery();
   if (name === 'result')  drawResultCanvas();
   if (name === 'intro')   enterIntro();
+  if (name === 'map')     renderMap();
+  const logoutBtn = document.getElementById('global-logout');
+  if (logoutBtn) logoutBtn.hidden = (name === 'login');
 }
 
 // ============================================================
@@ -830,18 +834,6 @@ auth.onAuthStateChanged((user) => {
     onAuthSuccess(user);
   }
 });
-
-// Logout handlers
-function doLogout() {
-  leaveRoom();
-  authHandled = false;
-  tutorialPlayed = false;
-  sessionStorage.removeItem('tutorialDone');
-  auth.signOut();
-  showScreen('login');
-}
-document.getElementById('logout-btn').addEventListener('click', doLogout);
-document.getElementById('logout-btn-gallery').addEventListener('click', doLogout);
 
 function announcePresence() {
   // No-op in Firebase version — matchmaking handles presence
@@ -1890,8 +1882,146 @@ function enableMouseFallback() {
 }
 
 // ============================================================
-// DEV PANEL
 // ============================================================
+// GLOBAL LOGOUT
+// ============================================================
+function doLogout() {
+  leaveRoom();
+  authHandled = false;
+  tutorialPlayed = false;
+  sessionStorage.removeItem('tutorialDone');
+  auth.signOut();
+  showScreen('login');
+}
+document.getElementById('global-logout').addEventListener('click', doLogout);
+
+// ============================================================
+// VIEW TAB NAVIGATION (gallery ↔ map)
+// ============================================================
+document.getElementById('tab-gallery-from-gallery')?.addEventListener('click', () => {});
+document.getElementById('tab-map-from-gallery')?.addEventListener('click', () => showScreen('map'));
+document.getElementById('tab-gallery')?.addEventListener('click', () => showScreen('gallery'));
+document.getElementById('tab-map')?.addEventListener('click', () => {});
+document.getElementById('map-back-btn')?.addEventListener('click', () => {
+  leaveRoom();
+  joinMatchmaking();
+  showScreen('intro');
+});
+
+// ============================================================
+// MAP — force-directed graph
+// ============================================================
+let mapNodes = [];
+let mapEdges = [];
+let mapTransform = { x: 0, y: 0, scale: 1 };
+let mapRAF = null;
+
+function renderMap() {
+  db.ref('gallery').limitToLast(200).once('value', (snap) => {
+    const entries = [];
+    if (snap.exists()) snap.forEach(c => { const v = c.val(); if (v && v.nameA && v.nameB) entries.push(v); });
+    buildGraph(entries);
+    startMapLoop();
+  }).catch(() => { buildGraph([]); startMapLoop(); });
+}
+
+function buildGraph(entries) {
+  const nodeMap = {};
+  mapEdges = [];
+  entries.forEach(e => {
+    if (!nodeMap[e.nameA]) nodeMap[e.nameA] = { id: e.nameA, x: 0, y: 0, vx: 0, vy: 0 };
+    if (!nodeMap[e.nameB]) nodeMap[e.nameB] = { id: e.nameB, x: 0, y: 0, vx: 0, vy: 0 };
+    mapEdges.push({ source: e.nameA, target: e.nameB, matchPct: e.matchPct || 0.3, tier: e.tier || 'OUT_OF_PHASE' });
+  });
+  mapNodes = Object.values(nodeMap);
+  mapNodes.forEach(n => {
+    if (n.id === state.name) { n.x = 0; n.y = 0; n.fixed = true; }
+    else { n.x = (Math.random()-0.5)*400; n.y = (Math.random()-0.5)*400; }
+  });
+  mapTransform = { x: 0, y: 0, scale: 1 };
+  for (let i = 0; i < 200; i++) simulateForces();
+}
+
+function simulateForces() {
+  const byId = {}; mapNodes.forEach(n => byId[n.id] = n);
+  for (let i = 0; i < mapNodes.length; i++) {
+    for (let j = i+1; j < mapNodes.length; j++) {
+      const a=mapNodes[i], b=mapNodes[j];
+      let dx=b.x-a.x, dy=b.y-a.y, dist=Math.sqrt(dx*dx+dy*dy)||1;
+      const f=800/(dist*dist), fx=(dx/dist)*f, fy=(dy/dist)*f;
+      if(!a.fixed){a.vx-=fx;a.vy-=fy;} if(!b.fixed){b.vx+=fx;b.vy+=fy;}
+    }
+  }
+  mapEdges.forEach(e => {
+    const a=byId[e.source], b=byId[e.target]; if(!a||!b) return;
+    let dx=b.x-a.x, dy=b.y-a.y, dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const td=50+(1-e.matchPct)*200, f=(dist-td)*0.01;
+    const fx=(dx/dist)*f, fy=(dy/dist)*f;
+    if(!a.fixed){a.vx+=fx;a.vy+=fy;} if(!b.fixed){b.vx-=fx;b.vy-=fy;}
+  });
+  mapNodes.forEach(n => { if(n.fixed){n.vx=0;n.vy=0;return;} n.vx*=0.85;n.vy*=0.85;n.x+=n.vx;n.y+=n.vy; });
+}
+
+function startMapLoop() {
+  cancelAnimationFrame(mapRAF);
+  const canvas = document.getElementById('map-canvas');
+  const ctx = canvas.getContext('2d');
+  const tooltip = document.getElementById('map-tooltip');
+  let isPanning=false, panStart={x:0,y:0};
+  canvas.onmousedown = e => { isPanning=true; panStart={x:e.clientX-mapTransform.x,y:e.clientY-mapTransform.y}; };
+  canvas.onmousemove = e => {
+    if(isPanning){mapTransform.x=e.clientX-panStart.x;mapTransform.y=e.clientY-panStart.y;}
+    const rect=canvas.getBoundingClientRect();
+    const mx=(e.clientX-rect.left-rect.width/2-mapTransform.x)/mapTransform.scale;
+    const my=(e.clientY-rect.top-rect.height/2-mapTransform.y)/mapTransform.scale;
+    let hovered=null;
+    mapNodes.forEach(n=>{if(Math.sqrt((n.x-mx)**2+(n.y-my)**2)<14)hovered=n;});
+    if(hovered){tooltip.hidden=false;tooltip.textContent=hovered.id;tooltip.style.left=(e.clientX-rect.left+12)+'px';tooltip.style.top=(e.clientY-rect.top-8)+'px';}
+    else tooltip.hidden=true;
+  };
+  canvas.onmouseup = () => isPanning=false;
+  canvas.onmouseleave = () => { isPanning=false; tooltip.hidden=true; };
+  canvas.onwheel = e => { e.preventDefault(); mapTransform.scale=Math.max(0.3,Math.min(4,mapTransform.scale*(e.deltaY>0?0.9:1.1))); };
+
+  const loop = () => {
+    if(state.screen!=='map') return;
+    simulateForces();
+    const dpr=window.devicePixelRatio||1, rect=canvas.getBoundingClientRect();
+    if(canvas.width!==rect.width*dpr){canvas.width=rect.width*dpr;canvas.height=rect.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);}
+    const w=rect.width, h=rect.height;
+    ctx.clearRect(0,0,w,h);
+    ctx.save();
+    ctx.translate(w/2+mapTransform.x, h/2+mapTransform.y);
+    ctx.scale(mapTransform.scale, mapTransform.scale);
+    const byId={}; mapNodes.forEach(n=>byId[n.id]=n);
+
+    // edges
+    mapEdges.forEach(e => {
+      const a=byId[e.source], b=byId[e.target]; if(!a||!b)return;
+      const al=0.15+e.matchPct*0.4;
+      const tc={IN_PHASE:`rgba(245,193,108,${al})`,INTERFERENCE:`rgba(212,200,184,${al})`,OUT_OF_PHASE:`rgba(100,100,90,${al})`};
+      ctx.strokeStyle=tc[e.tier]||`rgba(150,150,140,${al})`;
+      ctx.lineWidth=0.5+e.matchPct*2;
+      ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+      ctx.fillStyle=`rgba(180,170,160,${al*0.8})`;ctx.font='8px "JetBrains Mono",monospace';ctx.textAlign='center';
+      ctx.fillText(Math.round(e.matchPct*100)+'%',(a.x+b.x)/2,(a.y+b.y)/2-4);
+    });
+
+    // nodes
+    mapNodes.forEach(n => {
+      const isMe=n.id===state.name, r=isMe?10:7;
+      if(isMe){ctx.beginPath();ctx.arc(n.x,n.y,r+6,0,Math.PI*2);ctx.fillStyle='rgba(212,200,184,0.08)';ctx.fill();}
+      ctx.beginPath();ctx.arc(n.x,n.y,r,0,Math.PI*2);ctx.fillStyle=isMe?'#d4c8b8':'#706860';ctx.fill();
+      if(isMe){ctx.strokeStyle='#d4c8b8';ctx.lineWidth=1.5;ctx.stroke();}
+      ctx.fillStyle=isMe?'#f0ece0':'#b0a998';ctx.font=`${isMe?11:9}px "JetBrains Mono",monospace`;ctx.textAlign='center';
+      ctx.fillText(n.id,n.x,n.y+r+14);
+    });
+    ctx.restore();
+    mapRAF=requestAnimationFrame(loop);
+  };
+  mapRAF=requestAnimationFrame(loop);
+}
+
 // ============================================================
 // UTIL
 // ============================================================
