@@ -1,19 +1,3 @@
-/* ==========================================================
-   RESONANCE — a study of meeting
-   ---
-   Core loop:
-   1. Login → pick a name
-   2. Intro → wait until another user is present
-   3. Play  → two users each control one sine wave
-              their sum must match a target composite wave
-   4. Result → LUCKY / RARE / MISSED, saved to gallery
-   5. Gallery
-   ---
-   For local testing: the two roles communicate via BroadcastChannel,
-   so you can open two tabs of index.html and they sync.
-   Dev panel lets one person swap roles + jump between screens.
-   ========================================================== */
-
 // ============================================================
 // PARAMETERS — waves are pure sine: y = amp * sin(freq * x + phase)
 // ============================================================
@@ -771,8 +755,6 @@ function drawChapter3(ctx, w, h, t) {
 // ============================================================
 // LOGIN — Firebase Auth
 // ============================================================
-// LOGIN — Firebase Auth
-// ============================================================
 const authError = document.getElementById('auth-error');
 
 function showAuthError(msg) {
@@ -873,9 +855,7 @@ function maybeStart() {
 // ============================================================
 // ENCOUNTER ANIMATION
 // Plays on the waiting-sandbox canvas when the second user arrives.
-// Your wave stays; their wave drifts in from offscreen, approaches yours,
-// and once they meet, we fade into the play screen.
-// Timed to feel like YOU drew them in — not a system match.
+// Your wave stays; their wave drifts in from offscreen.
 // ============================================================
 let encounterRAF = null;
 const ENCOUNTER_DURATION = 3400; // ms
@@ -1175,8 +1155,7 @@ function computeMatch() {
   // Two-factor scoring:
   //   1. RMS error (absolute closeness) — soft curved
   //   2. Pearson correlation (shape similarity) — rewards "parallel but offset" waves
-  // Final score blends both, so you get credit for matching the shape even if
-  // amplitude or vertical offset is off.
+  // Final score blends both, so you get credit for matching the shape even if amplitude or vertical offset is off.
   if (!state.target) return 0;
   let diffSq = 0, targetSq = 0;
   let sumC = 0, sumT = 0, sumCT = 0, sumCC = 0, sumTT = 0;
@@ -1390,9 +1369,6 @@ function drawWave(w, h, ampScale, fn) {
   wctx.stroke();
 }
 
-// ============================================================
-// AI HELPER BUTTON
-// ============================================================
 // ============================================================
 // RESULT CANVAS — target + A + B overlaid
 // ============================================================
@@ -1681,9 +1657,6 @@ document.getElementById('back-to-play-btn').addEventListener('click', () => {
 });
 
 // ============================================================
-// MEDIAPIPE HAND TRACKING
-// ============================================================
-// ============================================================
 // HAND TRACKING (MediaPipe) — two hands
 //   Right hand (viewer's right): x = frequency, y = amplitude
 //   Left  hand (viewer's left) : y = phase
@@ -1881,7 +1854,6 @@ function enableMouseFallback() {
   });
 }
 
-// ============================================================
 // ============================================================
 // GLOBAL LOGOUT
 // ============================================================
