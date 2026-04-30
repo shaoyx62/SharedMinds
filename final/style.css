@@ -1,8 +1,3 @@
-/* ==========================================================
-   RESONANCE — a study of meeting
-   Aesthetic: lab instrument / oscilloscope, with warmth
-   ========================================================== */
-
 :root {
   --bg: #0a0e10;
   --bg-elev: #11161a;
@@ -11,13 +6,12 @@
   --ink-faint: #706860;
   --line: #2a3038;
 
-  --accent: #d4c8b8;            /* warm pearl — UI accent, not wave-specific */
+  --accent: #d4c8b8;
   --accent-dim: #6b6358;
-  --target: #f5c16c;            /* target wave — amber */
+  --target: #f5c16c;
   --target-dim: #6b5530;
-  --wave-a: #e87c7c;            /* wave A — coral */
-  --wave-b: #7cb4e8;            /* wave B — steel blue */
-
+  --wave-a: #e87c7c;
+  --wave-b: #7cb4e8;
   --tier-in-phase: #f5c16c;
   --tier-interference: #e8e4d8;
   --tier-out-of-phase: #6b6358;
